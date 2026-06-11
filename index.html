@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a73e8" />
+  <!-- Make it behave like an app when added to the iPhone home screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GoRoute" />
+  <link rel="manifest" href="manifest.json" />
+  <title>GoRoute — where to?</title>
+  <style>
+    :root {
+      --blue: #1a73e8;
+      --bg: #f1f3f6;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --green: #137333;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 24px);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    header { padding: 22px 4px 12px; }
+    h1 { font-size: 26px; margin: 0; letter-spacing: -0.5px; }
+    h1 span { color: var(--blue); }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 0 0 10px; }
+
+    .row { display: flex; align-items: center; gap: 12px; }
+    .weather-temp { font-size: 34px; font-weight: 600; line-height: 1; }
+    .weather-ico { font-size: 38px; }
+    .weather-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    input {
+      width: 100%;
+      font-size: 17px;
+      padding: 14px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+    input:focus { border-color: var(--blue); }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 12px;
+      padding: 15px 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: left;
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      margin-bottom: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .05s ease;
+    }
+    .btn:active { transform: scale(0.985); }
+    .btn .ico { font-size: 22px; width: 26px; text-align: center; }
+    .btn .label { flex: 1; }
+    .btn .hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+    .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn.primary .hint { color: #d6e4fc; }
+
+    .status { font-size: 13px; color: var(--muted); padding: 4px 4px 0; }
+    .status.err { color: #c5221f; }
+    .hidden { display: none !important; }
+    .muted { color: var(--muted); }
+    footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 18px; line-height: 1.6; }
+    .pill { display:inline-block; background:#e8f0fe; color:var(--blue); font-size:12px; padding:3px 9px; border-radius:999px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Go<span>Route</span></h1>
+    <div class="sub">Your location, the weather, and one tap to navigate.</div>
+  </header>
+
+  <!-- CURRENT LOCATION + WEATHER -->
+  <div class="card">
+    <h2>📍 You are here</h2>
+    <div id="locStatus" class="status">Getting your location…</div>
+    <div id="hereWeather" class="row hidden" style="margin-top:6px;">
+      <div class="weather-ico" id="hereIco">⛅️</div>
+      <div>
+        <div class="weather-temp"><span id="hereTemp">--</span>°</div>
+        <div class="weather-meta" id="hereDesc">—</div>
+        <div class="weather-meta" id="herePlace">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESTINATION -->
+  <div class="card">
+    <h2>🏁 Where to?</h2>
+    <input id="dest" type="text" inputmode="search" autocomplete="off"
+           placeholder="Type a destination address or place" />
+    <div id="destStatus" class="status"></div>
+    <div id="destWeather" class="row hidden" style="margin-top:10px;">
+      <div class="weather-ico" id="destIco">⛅️</div>
+      <div>
+        <div class="weather-temp"><span id="destTemp">--</span>°</div>
+        <div class="weather-meta" id="destDesc">Weather at destination</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROUTE OPTIONS -->
+  <div class="card" id="routesCard">
+    <h2>🚗 Pick how you'll go</h2>
+    <div class="muted" id="routesHint" style="font-size:13px; margin-bottom:12px;">
+      Enter a destination above first. Tapping an option opens Google Maps, which
+      shows the route choices &amp; times for you to start navigation.
+    </div>
+    <div id="routeButtons" class="hidden">
+      <a class="btn primary" id="rFastest" target="_blank" rel="noopener">
+        <span class="ico">⚡️</span>
+        <span class="label">Fastest route <div class="hint">Driving, default best route</div></span>
+        <span>›</span>
+      </a>
+      <a class="btn" id="rNoTolls" target="_blank" rel="noopener">
+        <span class="ico">💳</span>
+        <span class="label">Avoid tolls <div class="hint">Skip paid roads</div></span>
+        <span>›</span>
+      </a>
+      <a class="btn" id="rNoHwy" target="_blank" rel="noopener">
+        <span class="ico">🛣️</span>
+        <span class="label">Avoid highways <div class="hint">Stay on local roads</div></span>
+        <span>›</span>
+      </a>
+      <a class="btn" id="rTransit" target="_blank" rel="noopener">
+        <span class="ico">🚆</span>
+        <span class="label">Public transit <div class="hint">Bus / train / metro</div></span>
+        <span>›</span>
+      </a>
+      <a class="btn" id="rWalk" target="_blank" rel="noopener">
+        <span class="ico">🚶</span>
+        <span class="label">Walking <div class="hint">On foot</div></span>
+        <span>›</span>
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    <span class="pill">Tip</span> Add this page to your Home Screen for an app-like icon.<br>
+    Weather by open-meteo · Routing by Google Maps
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var here = null;            // {lat, lon}
+  var destResolved = null;    // {lat, lon, label} once geocoded (for weather only)
+  var lastDestText = "";
+
+  var el = function (id) { return document.getElementById(id); };
+
+  // ---- WMO weather code -> text + emoji -------------------------------
+  function weather(code) {
+    var map = {
+      0:["Clear sky","☀️"], 1:["Mainly clear","🌤️"], 2:["Partly cloudy","⛅️"], 3:["Overcast","☁️"],
+      45:["Fog","🌫️"], 48:["Rime fog","🌫️"],
+      51:["Light drizzle","🌦️"], 53:["Drizzle","🌦️"], 55:["Heavy drizzle","🌧️"],
+      61:["Light rain","🌦️"], 63:["Rain","🌧️"], 65:["Heavy rain","🌧️"],
+      66:["Freezing rain","🌧️"], 67:["Freezing rain","🌧️"],
+      71:["Light snow","🌨️"], 73:["Snow","🌨️"], 75:["Heavy snow","❄️"], 77:["Snow grains","🌨️"],
+      80:["Rain showers","🌦️"], 81:["Rain showers","🌧️"], 82:["Violent showers","⛈️"],
+      85:["Snow showers","🌨️"], 86:["Snow showers","❄️"],
+      95:["Thunderstorm","⛈️"], 96:["Thunderstorm + hail","⛈️"], 99:["Thunderstorm + hail","⛈️"]
+    };
+    return map[code] || ["—","🌡️"];
+  }
+
+  // ---- Get current weather from open-meteo (no API key) ---------------
+  function fetchWeather(lat, lon) {
+    var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat +
+              "&longitude=" + lon + "&current=temperature_2m,weather_code";
+    return fetch(url).then(function (r) { return r.json(); });
+  }
+
+  // ---- Reverse geocode current location (nice place name) -------------
+  function placeName(lat, lon) {
+    var url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&lat=" +
+              lat + "&lon=" + lon;
+    return fetch(url, { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.address) return "";
+        var a = d.address;
+        var city = a.city || a.town || a.village || a.suburb || a.county || "";
+        var region = a.state || a.country || "";
+        return [city, region].filter(Boolean).join(", ");
+      })
+      .catch(function () { return ""; });
+  }
+
+  // ---- Forward geocode a typed destination (for its weather) ----------
+  function geocode(text) {
+    var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
+              encodeURIComponent(text);
+    return fetch(url, { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (arr) {
+        if (!arr || !arr.length) return null;
+        return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon), label: arr[0].display_name };
+      })
+      .catch(function () { return null; });
+  }
+
+  // ===== STEP 1: current location ======================================
+  function initLocation() {
+    if (!navigator.geolocation) {
+      el("locStatus").textContent = "This browser can't share location.";
+      el("locStatus").className = "status err";
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      here = { lat: pos.coords.latitude.toFixed(5), lon: pos.coords.longitude.toFixed(5) };
+      el("locStatus").classList.add("hidden");
+      el("hereWeather").classList.remove("hidden");
+
+      fetchWeather(here.lat, here.lon).then(function (d) {
+        if (d && d.current) {
+          var w = weather(d.current.weather_code);
+          el("hereTemp").textContent = Math.round(d.current.temperature_2m);
+          el("hereDesc").textContent = w[0];
+          el("hereIco").textContent = w[1];
+        }
+      });
+      placeName(here.lat, here.lon).then(function (name) {
+        el("herePlace").textContent = name || (here.lat + ", " + here.lon);
+      });
+
+      refreshRoutes();
+    }, function (err) {
+      var msg = "Couldn't get your location.";
+      if (err.code === 1) msg = "Location blocked. Allow location for this site in Settings, then reload.";
+      el("locStatus").textContent = msg;
+      el("locStatus").className = "status err";
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  }
+
+  // ===== STEP 2: build Google Maps deep links ==========================
+  // No `dir_action=navigate` on purpose -> Maps opens the route overview
+  // showing alternative routes & times so the user can choose, then Start.
+  function mapsLink(opts) {
+    var dest = lastDestText;
+    if (!dest) return "#";
+    var base = "https://www.google.com/maps/dir/?api=1";
+    var origin = here ? ("&origin=" + here.lat + "," + here.lon) : "";
+    var url = base + origin + "&destination=" + encodeURIComponent(dest) +
+              "&travelmode=" + opts.mode;
+    if (opts.avoid) url += "&avoid=" + opts.avoid;
+    return url;
+  }
+
+  function refreshRoutes() {
+    lastDestText = el("dest").value.trim();
+    var ready = lastDestText.length > 0;
+    el("routeButtons").classList.toggle("hidden", !ready);
+    el("routesHint").classList.toggle("hidden", ready);
+    if (!ready) return;
+
+    el("rFastest").href = mapsLink({ mode: "driving" });
+    el("rNoTolls").href = mapsLink({ mode: "driving", avoid: "tolls" });
+    el("rNoHwy").href   = mapsLink({ mode: "driving", avoid: "highways" });
+    el("rTransit").href = mapsLink({ mode: "transit" });
+    el("rWalk").href    = mapsLink({ mode: "walking" });
+  }
+
+  // ===== STEP 3: destination weather (debounced after typing) ==========
+  var debounce;
+  function onDestInput() {
+    refreshRoutes();
+    var text = el("dest").value.trim();
+    el("destWeather").classList.add("hidden");
+    el("destStatus").textContent = "";
+    clearTimeout(debounce);
+    if (text.length < 3) return;
+    debounce = setTimeout(function () {
+      el("destStatus").textContent = "Checking destination…";
+      geocode(text).then(function (res) {
+        if (!res) { el("destStatus").textContent = "Couldn't find that place (you can still tap a route)."; return; }
+        el("destStatus").textContent = res.label;
+        fetchWeather(res.lat, res.lon).then(function (d) {
+          if (d && d.current) {
+            var w = weather(d.current.weather_code);
+            el("destTemp").textContent = Math.round(d.current.temperature_2m);
+            el("destDesc").textContent = w[0] + " at destination";
+            el("destIco").textContent = w[1];
+            el("destWeather").classList.remove("hidden");
+          }
+        });
+      });
+    }, 700);
+  }
+
+  el("dest").addEventListener("input", onDestInput);
+  initLocation();
+})();
+</script>
+</body>
+</html>

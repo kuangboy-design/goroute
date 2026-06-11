@@ -1,0 +1,17 @@
+{
+  "name": "GoRoute",
+  "short_name": "GoRoute",
+  "description": "Your location, the weather, and one tap to Google Maps navigation.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f3f6",
+  "theme_color": "#1a73e8",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Crect width='512' height='512' rx='112' fill='%231a73e8'/%3E%3Cpath d='M256 96c-66 0-120 54-120 120 0 90 120 200 120 200s120-110 120-200c0-66-54-120-120-120zm0 168a48 48 0 110-96 48 48 0 010 96z' fill='white'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
