@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="GoRoute" />
   <link rel="manifest" href="manifest.json" />
+  <script src="tw-districts.js"></script>
   <title>GoRoute — where to?</title>
   <style>
     :root {
@@ -60,6 +61,35 @@
       color: var(--text);
     }
     input:focus { border-color: var(--blue); }
+
+    select {
+      width: 100%;
+      font-size: 16px;
+      padding: 13px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .two { display: flex; gap: 10px; margin-bottom: 10px; }
+    .two select { flex: 1; min-width: 0; }
+    #addr { margin-bottom: 10px; }
+    .search-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .search-btn:active { transform: scale(0.99); }
+    .btn .info { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 4px; }
+    .btn.primary .info { color: #eaf1fd; }
 
     .btn {
       display: flex;
@@ -118,8 +148,13 @@
   <!-- DESTINATION -->
   <div class="card">
     <h2>🏁 Where to?</h2>
-    <input id="dest" type="text" inputmode="search" autocomplete="off"
-           placeholder="Type a destination address or place" />
+    <div class="two">
+      <select id="city"><option value="">縣市 City</option></select>
+      <select id="district"><option value="">區 District</option></select>
+    </div>
+    <input id="addr" type="text" inputmode="search" autocomplete="off"
+           placeholder="地址 / 公司 / 景點名稱 Address, company or place" />
+    <button class="search-btn" id="searchBtn">Search routes</button>
     <div id="destStatus" class="status"></div>
     <div id="destWeather" class="row hidden" style="margin-top:10px;">
       <div class="weather-ico" id="destIco">⛅️</div>
@@ -134,35 +169,53 @@
   <div class="card" id="routesCard">
     <h2>🚗 Pick how you'll go</h2>
     <div class="muted" id="routesHint" style="font-size:13px; margin-bottom:12px;">
-      Enter a destination above first. Tapping an option opens Google Maps, which
-      shows the route choices &amp; times for you to start navigation.
+      Just type an address, company or place — or pick a City/District — then tap
+      <b>Search routes</b>. Tapping an option then opens Google Maps to navigate.
     </div>
     <div id="routeButtons" class="hidden">
       <a class="btn primary" id="rFastest" target="_blank" rel="noopener">
         <span class="ico">⚡️</span>
-        <span class="label">Fastest route <div class="hint">Driving, default best route</div></span>
+        <span class="label">Fastest route
+          <div class="hint">Driving, best route</div>
+          <div class="info" id="iFastest">—</div>
+        </span>
         <span>›</span>
       </a>
       <a class="btn" id="rNoTolls" target="_blank" rel="noopener">
         <span class="ico">💳</span>
-        <span class="label">Avoid tolls <div class="hint">Skip paid roads</div></span>
+        <span class="label">Avoid tolls
+          <div class="hint">Skip paid roads</div>
+          <div class="info" id="iNoTolls">Payment: $0</div>
+        </span>
         <span>›</span>
       </a>
       <a class="btn" id="rNoHwy" target="_blank" rel="noopener">
         <span class="ico">🛣️</span>
-        <span class="label">Avoid highways <div class="hint">Stay on local roads</div></span>
+        <span class="label">Avoid highways
+          <div class="hint">Stay on local roads</div>
+          <div class="info" id="iNoHwy">Payment: $0</div>
+        </span>
         <span>›</span>
       </a>
       <a class="btn" id="rTransit" target="_blank" rel="noopener">
         <span class="ico">🚆</span>
-        <span class="label">Public transit <div class="hint">Bus / train / metro</div></span>
+        <span class="label">Public transit
+          <div class="hint">Bus / train / metro</div>
+          <div class="info" id="iTransit">See times in Google Maps</div>
+        </span>
         <span>›</span>
       </a>
       <a class="btn" id="rWalk" target="_blank" rel="noopener">
         <span class="ico">🚶</span>
-        <span class="label">Walking <div class="hint">On foot</div></span>
+        <span class="label">Walking
+          <div class="hint">On foot</div>
+          <div class="info" id="iWalk">Payment: $0</div>
+        </span>
         <span>›</span>
       </a>
+    </div>
+    <div class="muted" style="font-size:11px; margin-top:6px;">
+      Times &amp; tolls are estimates — confirm exact values in Google Maps.
     </div>
   </div>
 
@@ -175,9 +228,8 @@
 (function () {
   "use strict";
 
-  var here = null;            // {lat, lon}
-  var destResolved = null;    // {lat, lon, label} once geocoded (for weather only)
-  var lastDestText = "";
+  var here = null;            // {lat, lon} current location
+  var dest = null;            // {lat, lon, label} chosen destination
 
   var el = function (id) { return document.getElementById(id); };
 
@@ -204,26 +256,20 @@
     return fetch(url).then(function (r) { return r.json(); });
   }
 
-  // ---- Reverse geocode current location (nice place name) -------------
-  function placeName(lat, lon) {
-    var url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&lat=" +
-              lat + "&lon=" + lon;
+  // ---- Reverse geocode current location -> FULL address --------------
+  function fullAddress(lat, lon) {
+    var url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=18" +
+              "&addressdetails=1&accept-language=zh-TW&lat=" + lat + "&lon=" + lon;
     return fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (!d || !d.address) return "";
-        var a = d.address;
-        var city = a.city || a.town || a.village || a.suburb || a.county || "";
-        var region = a.state || a.country || "";
-        return [city, region].filter(Boolean).join(", ");
-      })
+      .then(function (d) { return (d && d.display_name) ? d.display_name : ""; })
       .catch(function () { return ""; });
   }
 
-  // ---- Forward geocode a typed destination (for its weather) ----------
-  function geocode(text) {
-    var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
-              encodeURIComponent(text);
+  // ---- Forward geocode the combined City/District/address query ------
+  function geocode(q) {
+    var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1" +
+              "&accept-language=zh-TW&q=" + encodeURIComponent(q);
     return fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.json(); })
       .then(function (arr) {
@@ -231,6 +277,35 @@
         return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon), label: arr[0].display_name };
       })
       .catch(function () { return null; });
+  }
+
+  // ---- Free driving route (OSRM) -> { sec, m } -----------------------
+  function drive(o, d) {
+    var url = "https://router.project-osrm.org/route/v1/driving/" +
+              o.lon + "," + o.lat + ";" + d.lon + "," + d.lat + "?overview=false";
+    return fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.routes && j.routes.length)
+          return { sec: j.routes[0].duration, m: j.routes[0].distance };
+        return null;
+      })
+      .catch(function () { return null; });
+  }
+
+  function fmtDur(sec) {
+    var m = Math.round(sec / 60);
+    if (m < 1) return "<1 Min";
+    if (m < 60) return m + " Min";
+    return Math.floor(m / 60) + " Hr " + (m % 60) + " Min";
+  }
+  function fmtKm(m) { return (m / 1000).toFixed(1) + " km"; }
+
+  // Taiwan national-freeway toll estimate: small car ~NT$1.2/km,
+  // first 20 km/day free. Only a rough guide — real value is in Google Maps.
+  function toll(km) {
+    if (km <= 20) return "$0";
+    return "≈ NT$" + Math.round((km - 20) * 1.2) + " (est.)";
   }
 
   // ===== STEP 1: current location ======================================
@@ -253,11 +328,9 @@
           el("hereIco").textContent = w[1];
         }
       });
-      placeName(here.lat, here.lon).then(function (name) {
-        el("herePlace").textContent = name || (here.lat + ", " + here.lon);
+      fullAddress(here.lat, here.lon).then(function (addr) {
+        el("herePlace").textContent = addr || (here.lat + ", " + here.lon);
       });
-
-      refreshRoutes();
     }, function (err) {
       var msg = "Couldn't get your location.";
       if (err.code === 1) msg = "Location blocked. Allow location for this site in Settings, then reload.";
@@ -266,62 +339,114 @@
     }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
   }
 
-  // ===== STEP 2: build Google Maps deep links ==========================
+  // ===== Build Google Maps deep links (using chosen dest coords) =======
   // No `dir_action=navigate` on purpose -> Maps opens the route overview
   // showing alternative routes & times so the user can choose, then Start.
   function mapsLink(opts) {
-    var dest = lastDestText;
     if (!dest) return "#";
     var base = "https://www.google.com/maps/dir/?api=1";
     var origin = here ? ("&origin=" + here.lat + "," + here.lon) : "";
-    var url = base + origin + "&destination=" + encodeURIComponent(dest) +
+    var url = base + origin + "&destination=" + dest.lat + "," + dest.lon +
               "&travelmode=" + opts.mode;
     if (opts.avoid) url += "&avoid=" + opts.avoid;
     return url;
   }
 
-  function refreshRoutes() {
-    lastDestText = el("dest").value.trim();
-    var ready = lastDestText.length > 0;
-    el("routeButtons").classList.toggle("hidden", !ready);
-    el("routesHint").classList.toggle("hidden", ready);
-    if (!ready) return;
+  // ===== City / District dropdowns =====================================
+  function initDropdowns() {
+    var data = window.TW_DISTRICTS || {};
+    var citySel = el("city");
+    Object.keys(data).forEach(function (c) {
+      var o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      citySel.appendChild(o);
+    });
+    citySel.addEventListener("change", function () {
+      var dSel = el("district");
+      dSel.innerHTML = '<option value="">區 District</option>';
+      (data[citySel.value] || []).forEach(function (d) {
+        var o = document.createElement("option");
+        o.value = d; o.textContent = d;
+        dSel.appendChild(o);
+      });
+    });
+  }
+
+  // ===== Search button: geocode + weather + routes =====================
+  function doSearch() {
+    var city = el("city").value;
+    var district = el("district").value;
+    var addr = el("addr").value.trim();
+    var s = el("destStatus");
+
+    if (!addr && !city) {
+      s.className = "status err";
+      s.textContent = "請輸入地址／地點,或選擇縣市 — enter an address/place, or pick a City.";
+      return;
+    }
+    // City/District are optional. If an address/place is typed, it leads the
+    // search; City/District just narrow it down when provided.
+    var query = [addr, district, city, "台灣"].filter(Boolean).join(", ");
+    s.className = "status";
+    s.textContent = "Searching…";
+    el("destWeather").classList.add("hidden");
+    el("routeButtons").classList.add("hidden");
+    el("routesHint").classList.remove("hidden");
+
+    geocode(query).then(function (res) {
+      if (!res) {
+        s.className = "status err";
+        s.textContent = "找不到地點，請調整地址 — couldn't find that, try refining.";
+        return;
+      }
+      dest = res;
+      s.className = "status";
+      s.textContent = res.label;
+
+      fetchWeather(res.lat, res.lon).then(function (d) {
+        if (d && d.current) {
+          var w = weather(d.current.weather_code);
+          el("destTemp").textContent = Math.round(d.current.temperature_2m);
+          el("destDesc").textContent = w[0] + " at destination";
+          el("destIco").textContent = w[1];
+          el("destWeather").classList.remove("hidden");
+        }
+      });
+
+      buildRoutes();
+    });
+  }
+
+  function buildRoutes() {
+    el("routesHint").classList.add("hidden");
+    el("routeButtons").classList.remove("hidden");
 
     el("rFastest").href = mapsLink({ mode: "driving" });
     el("rNoTolls").href = mapsLink({ mode: "driving", avoid: "tolls" });
     el("rNoHwy").href   = mapsLink({ mode: "driving", avoid: "highways" });
     el("rTransit").href = mapsLink({ mode: "transit" });
     el("rWalk").href    = mapsLink({ mode: "walking" });
-  }
 
-  // ===== STEP 3: destination weather (debounced after typing) ==========
-  var debounce;
-  function onDestInput() {
-    refreshRoutes();
-    var text = el("dest").value.trim();
-    el("destWeather").classList.add("hidden");
-    el("destStatus").textContent = "";
-    clearTimeout(debounce);
-    if (text.length < 3) return;
-    debounce = setTimeout(function () {
-      el("destStatus").textContent = "Checking destination…";
-      geocode(text).then(function (res) {
-        if (!res) { el("destStatus").textContent = "Couldn't find that place (you can still tap a route)."; return; }
-        el("destStatus").textContent = res.label;
-        fetchWeather(res.lat, res.lon).then(function (d) {
-          if (d && d.current) {
-            var w = weather(d.current.weather_code);
-            el("destTemp").textContent = Math.round(d.current.temperature_2m);
-            el("destDesc").textContent = w[0] + " at destination";
-            el("destIco").textContent = w[1];
-            el("destWeather").classList.remove("hidden");
-          }
-        });
+    el("iNoTolls").textContent = "Payment: $0";
+    el("iNoHwy").textContent   = "Payment: $0";
+    el("iTransit").textContent = "See times in Google Maps";
+    el("iWalk").textContent    = "Payment: $0";
+    el("iFastest").textContent = "Calculating time…";
+
+    if (here && dest) {
+      drive(here, dest).then(function (r) {
+        if (!r) { el("iFastest").textContent = "See time in Google Maps"; return; }
+        var km = r.m / 1000;
+        el("iFastest").textContent =
+          fmtDur(r.sec) + " · " + fmtKm(r.m) + " · Payment: " + toll(km);
       });
-    }, 700);
+    } else {
+      el("iFastest").textContent = "See time in Google Maps";
+    }
   }
 
-  el("dest").addEventListener("input", onDestInput);
+  el("searchBtn").addEventListener("click", doSearch);
+  initDropdowns();
   initLocation();
 })();
 </script>
