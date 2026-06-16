@@ -91,6 +91,27 @@
     .btn .info { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 4px; }
     .btn.primary .info { color: #eaf1fd; }
 
+    .fav-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .fav-head h2 { margin: 0; }
+    .fav-edit {
+      font-size: 13px; padding: 6px 14px; border-radius: 999px;
+      border: 1px solid var(--line); background: #fff; color: var(--blue);
+      font-weight: 600; cursor: pointer;
+    }
+    .fav-edit.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .fav-grid { display: flex; gap: 10px; }
+    .fav-item {
+      flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
+      gap: 7px; padding: 16px 4px; border: 1px solid var(--line); border-radius: 18px;
+      background: #fff; cursor: pointer; transition: transform .05s ease;
+    }
+    .fav-item:active { transform: scale(0.95); }
+    .fav-emoji { font-size: 30px; line-height: 1; filter: grayscale(1); opacity: .35; }
+    .fav-item.saved .fav-emoji { filter: none; opacity: 1; }
+    .fav-cap { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .fav-item.saved .fav-cap { color: var(--text); }
+    .fav-grid.editing .fav-item { border-color: var(--blue); border-style: dashed; background: #f5f9ff; }
+
     .btn {
       display: flex;
       align-items: center;
@@ -162,6 +183,31 @@
         <div class="weather-temp"><span id="destTemp">--</span>°</div>
         <div class="weather-meta" id="destDesc">Weather at destination</div>
       </div>
+    </div>
+  </div>
+
+  <!-- FAVORITES -->
+  <div class="card">
+    <div class="fav-head">
+      <h2>⭐ Favorites</h2>
+      <button class="fav-edit" id="favEdit">Set</button>
+    </div>
+    <div class="muted" id="favMsg" style="font-size:12px; margin-bottom:12px;">
+      Tap an icon to go there. Tap <b>Set</b>, then an icon, to save the current place.
+    </div>
+    <div class="fav-grid" id="favGrid">
+      <button class="fav-item" id="fav-house" title="House">
+        <span class="fav-emoji">🏠</span><span class="fav-cap">House</span>
+      </button>
+      <button class="fav-item" id="fav-work" title="Work">
+        <span class="fav-emoji">💼</span><span class="fav-cap">Work</span>
+      </button>
+      <button class="fav-item" id="fav-trip1" title="Trip 1">
+        <span class="fav-emoji">🧳</span><span class="fav-cap">Trip 1</span>
+      </button>
+      <button class="fav-item" id="fav-trip2" title="Trip 2">
+        <span class="fav-emoji">🗺️</span><span class="fav-cap">Trip 2</span>
+      </button>
     </div>
   </div>
 
@@ -266,10 +312,10 @@
       .catch(function () { return ""; });
   }
 
-  // ---- Forward geocode the combined City/District/address query ------
+  // ---- Forward geocode a single query (restricted to Taiwan) ---------
   function geocode(q) {
     var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1" +
-              "&accept-language=zh-TW&q=" + encodeURIComponent(q);
+              "&countrycodes=tw&accept-language=zh-TW&q=" + encodeURIComponent(q);
     return fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.json(); })
       .then(function (arr) {
@@ -277,6 +323,29 @@
         return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon), label: arr[0].display_name };
       })
       .catch(function () { return null; });
+  }
+
+  // ---- Try several query forms, return the first that resolves -------
+  function geocodeFirst(queries) {
+    var i = 0;
+    function next() {
+      if (i >= queries.length) return Promise.resolve(null);
+      var q = queries[i++];
+      if (!q) return next();
+      return geocode(q).then(function (r) { return r || next(); });
+    }
+    return next();
+  }
+
+  // For each query, also try the 台/臺 spelling variant (OSM mixes them).
+  function withVariants(list) {
+    var out = [], seen = {};
+    list.forEach(function (q) {
+      [q, q.replace(/臺/g, "台"), q.replace(/台/g, "臺")].forEach(function (v) {
+        if (v && !seen[v]) { seen[v] = 1; out.push(v); }
+      });
+    });
+    return out;
   }
 
   // ---- Free driving route (OSRM) -> { sec, m } -----------------------
@@ -384,37 +453,50 @@
       s.textContent = "請輸入地址／地點,或選擇縣市 — enter an address/place, or pick a City.";
       return;
     }
-    // City/District are optional. If an address/place is typed, it leads the
-    // search; City/District just narrow it down when provided.
-    var query = [addr, district, city, "台灣"].filter(Boolean).join(", ");
+    // Taiwan addresses are written contiguously (縣市+區+路+號), so try that
+    // form first, then progressively looser fallbacks down to the city center.
+    var candidates = [];
+    if (addr && (city || district)) candidates.push(city + district + addr); // 臺北市信義區市府路45號
+    if (addr && city)               candidates.push(addr + " " + city);       // place + city
+    if (addr)                       candidates.push(addr);                    // landmark / company alone
+    if (city || district)           candidates.push(city + district);         // district center
+    if (city)                       candidates.push(city);                    // city center
+    var queries = withVariants(candidates);
+
     s.className = "status";
     s.textContent = "Searching…";
     el("destWeather").classList.add("hidden");
     el("routeButtons").classList.add("hidden");
     el("routesHint").classList.remove("hidden");
 
-    geocode(query).then(function (res) {
+    geocodeFirst(queries).then(function (res) {
       if (!res) {
         s.className = "status err";
         s.textContent = "找不到地點，請調整地址 — couldn't find that, try refining.";
         return;
       }
-      dest = res;
-      s.className = "status";
-      s.textContent = res.label;
-
-      fetchWeather(res.lat, res.lon).then(function (d) {
-        if (d && d.current) {
-          var w = weather(d.current.weather_code);
-          el("destTemp").textContent = Math.round(d.current.temperature_2m);
-          el("destDesc").textContent = w[0] + " at destination";
-          el("destIco").textContent = w[1];
-          el("destWeather").classList.remove("hidden");
-        }
-      });
-
-      buildRoutes();
+      useDestination(res);
     });
+  }
+
+  // ===== Apply a destination (from a search OR a favorite) =============
+  function useDestination(res) {
+    dest = res;
+    var s = el("destStatus");
+    s.className = "status";
+    s.textContent = res.label;
+
+    fetchWeather(res.lat, res.lon).then(function (d) {
+      if (d && d.current) {
+        var w = weather(d.current.weather_code);
+        el("destTemp").textContent = Math.round(d.current.temperature_2m);
+        el("destDesc").textContent = w[0] + " at destination";
+        el("destIco").textContent = w[1];
+        el("destWeather").classList.remove("hidden");
+      }
+    });
+
+    buildRoutes();
   }
 
   function buildRoutes() {
@@ -445,8 +527,67 @@
     }
   }
 
+  // ===== Favorites (saved in this browser via localStorage) ============
+  var FAV_KEYS = ["house", "work", "trip1", "trip2"];
+
+  function loadFavs() {
+    try { return JSON.parse(localStorage.getItem("goroute_favs") || "{}"); }
+    catch (e) { return {}; }
+  }
+  function saveFavs(f) {
+    try { localStorage.setItem("goroute_favs", JSON.stringify(f)); } catch (e) {}
+  }
+  var favEditMode = false;
+
+  function favSay(text, isErr) {
+    var m = el("favMsg");
+    m.className = isErr ? "status err" : "muted";
+    m.style.fontSize = "12px";
+    m.innerHTML = text;
+  }
+  function renderFavs() {
+    var f = loadFavs();
+    FAV_KEYS.forEach(function (k) {
+      var rec = f[k];
+      var item = el("fav-" + k);
+      item.classList.toggle("saved", !!rec);
+      item.title = rec ? rec.label : "Not set";
+    });
+  }
+  function setEditMode(on) {
+    favEditMode = on;
+    el("favEdit").classList.toggle("active", on);
+    el("favGrid").classList.toggle("editing", on);
+    if (on) favSay("Tap an icon to save the current place into it.");
+    else favSay("Tap an icon to go there. Tap <b>Set</b>, then an icon, to save the current place.");
+  }
+  function initFavs() {
+    el("favEdit").addEventListener("click", function () { setEditMode(!favEditMode); });
+
+    FAV_KEYS.forEach(function (k) {
+      el("fav-" + k).addEventListener("click", function () {
+        if (favEditMode) {
+          if (!dest) { favSay("請先搜尋地點 — search a place first, then tap an icon.", true); return; }
+          var f = loadFavs();
+          f[k] = { lat: dest.lat, lon: dest.lon, label: dest.label };
+          saveFavs(f);
+          renderFavs();
+          setEditMode(false);
+          favSay("Saved ⭐ " + dest.label);
+        } else {
+          var rec = loadFavs()[k];
+          if (!rec) { favSay("Empty — tap <b>Set</b> first to save a place here.", true); return; }
+          useDestination(rec);
+          el("destStatus").scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+    });
+    renderFavs();
+  }
+
   el("searchBtn").addEventListener("click", doSearch);
   initDropdowns();
+  initFavs();
   initLocation();
 })();
 </script>
