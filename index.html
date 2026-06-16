@@ -88,6 +88,10 @@
       cursor: pointer;
     }
     .search-btn:active { transform: scale(0.99); }
+    .dest-addr { margin-top: 10px; padding: 12px 14px; background: #eef4ff; border: 1px solid #d6e4fc; border-radius: 12px; }
+    .dest-addr-cap { display: block; font-size: 11px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .dest-addr-text { font-size: 15px; color: var(--text); line-height: 1.4; }
+    .dest-addr-sub { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
     .btn .info { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 4px; }
     .btn.primary .info { color: #eaf1fd; }
 
@@ -177,6 +181,11 @@
            placeholder="地址 / 公司 / 景點名稱 Address, company or place" />
     <button class="search-btn" id="searchBtn">Search routes</button>
     <div id="destStatus" class="status"></div>
+    <div id="destAddr" class="dest-addr hidden">
+      <span class="dest-addr-cap">📍 Going to</span>
+      <span class="dest-addr-text" id="destAddrText"></span>
+      <span class="dest-addr-sub" id="destAddrSub"></span>
+    </div>
     <div id="destWeather" class="row hidden" style="margin-top:10px;">
       <div class="weather-ico" id="destIco">⛅️</div>
       <div>
@@ -465,9 +474,15 @@
 
     s.className = "status";
     s.textContent = "Searching…";
+    el("destAddr").classList.add("hidden");
     el("destWeather").classList.add("hidden");
     el("routeButtons").classList.add("hidden");
     el("routesHint").classList.remove("hidden");
+
+    // The address the user actually entered (Taiwan style, contiguous). OSM
+    // often lacks house numbers here, so we DISPLAY this full typed address
+    // while still routing with the coordinates the geocoder returned.
+    var typedAddr = [city, district, addr].filter(Boolean).join("");
 
     geocodeFirst(queries).then(function (res) {
       if (!res) {
@@ -475,16 +490,27 @@
         s.textContent = "找不到地點，請調整地址 — couldn't find that, try refining.";
         return;
       }
-      useDestination(res);
+      useDestination({
+        lat: res.lat,
+        lon: res.lon,
+        label: typedAddr || res.label,   // prefer the full address you typed
+        matched: res.label               // what the map actually matched (for reference)
+      });
     });
   }
 
   // ===== Apply a destination (from a search OR a favorite) =============
   function useDestination(res) {
     dest = res;
-    var s = el("destStatus");
-    s.className = "status";
-    s.textContent = res.label;
+    el("destStatus").textContent = "";
+    el("destAddrText").textContent = res.label;    // the full typed address
+    var sub = el("destAddrSub");
+    if (res.matched && res.matched !== res.label) {
+      sub.textContent = "地圖定位 Map matched: " + res.matched;
+    } else {
+      sub.textContent = "";
+    }
+    el("destAddr").classList.remove("hidden");
 
     fetchWeather(res.lat, res.lon).then(function (d) {
       if (d && d.current) {
