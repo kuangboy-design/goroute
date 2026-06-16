@@ -421,6 +421,9 @@
       <a class="site-btn" data-sleep="kkday" target="_blank" rel="noopener">
         <span class="ico">🗓️</span><span class="t">KKday<small>Stays &amp; travel experiences</small></span><span>›</span>
       </a>
+      <a class="site-btn" data-sleep="eztravel" target="_blank" rel="noopener">
+        <span class="ico">🌏</span><span class="t">ezTravel 易遊網<small>台灣旅遊網 — 開啟訂房頁</small></span><span>›</span>
+      </a>
       <div class="note">Booking.com pre-fills everything. The others open your destination &amp; dates — re-confirm on their page if needed.</div>
     </div>
   </div>
@@ -500,6 +503,9 @@
       </a>
       <a class="site-btn" data-fly="peach" target="_blank" rel="noopener">
         <span class="ico">🍑</span><span class="t">Peach 樂桃<small>Low-cost carrier (Japan routes)</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="eztravel" target="_blank" rel="noopener">
+        <span class="ico">🌏</span><span class="t">ezTravel 易遊網<small>台灣旅遊網 — 開啟機票頁</small></span><span>›</span>
       </a>
       <div class="note">Google Flights understands city names and pre-fills your trip. Skyscanner / Trip.com / Kayak open their flight search — enter the same details there.</div>
     </div>
@@ -731,6 +737,7 @@
     }
     if (site === "klook") return "https://www.klook.com/search/?query=" + enc(dest + " hotel");
     if (site === "kkday") return "https://www.kkday.com/en/search?keyword=" + enc(dest + " hotel");
+    if (site === "eztravel") return "https://hotel.eztravel.com.tw/";
     return "#";
   }
 
@@ -757,6 +764,7 @@
     if (site === "klook")      return "https://www.klook.com/search/?query=" + enc(to + " flights");
     if (site === "agoda")      return "https://www.agoda.com/flights/";
     if (site === "peach")      return "https://www.flypeach.com/";
+    if (site === "eztravel")   return "https://flight.eztravel.com.tw/";
     return "#";
   }
 
