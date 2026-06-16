@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#7d8a96" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Kuang之客棧" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&display=swap" rel="stylesheet" />
+  <title>Kuang之客棧 · Eat · Sleep · Fly</title>
+  <style>
+    :root {
+      --parch: #efe3c6; --parch-d: #e3d2a8;
+      --wood: #6f4827; --wood-d: #2f1e0f; --wood-l: #8b5a2b;
+      --ink: #3a2a18; --ink-soft: #7a5a32; --muted: #9a7c4c; --line: #b79b6a;
+      --rust: #9c4a26;
+      --kai: "KaiTi","DFKai-SB","BiauKai","STKaiti","TW-Kai",serif;
+      --western: "Rye","Special Elite",Georgia,serif;
+      --aged: "Special Elite",Georgia,serif;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html {
+      min-height: 100%;
+      background:
+        radial-gradient(ellipse 60% 38% at 80% 10%, rgba(228,237,245,.75), transparent 60%),
+        radial-gradient(ellipse 130% 55% at 15% 108%, #5d6a75, transparent 60%),
+        radial-gradient(ellipse 120% 50% at 95% 110%, #515d67, transparent 55%),
+        linear-gradient(180deg, #bcc7d1 0%, #9caab6 32%, #7d8a96 60%, #626e79 100%);
+      background-attachment: fixed;
+    }
+    body {
+      margin: 0 auto; max-width: 560px; position: relative; background: transparent;
+      color: var(--ink); font-family: Georgia, var(--kai), serif;
+      padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 30px);
+    }
+    /* aged grain overlay */
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: .07;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    /* desolate desert decorations */
+    .decor { position: fixed; pointer-events: none; z-index: -1; filter: sepia(1) brightness(.78) contrast(1.15); }
+    .decor.cactus { left: 4px; bottom: 6px; font-size: 70px; opacity: .30; }
+    .decor.skull  { right: 8px; bottom: 14px; font-size: 30px; opacity: .22; }
+    .decor.bird   { left: 14%; top: 70px; font-size: 20px; opacity: .30; }
+    .decor.bird2  { right: 18%; top: 96px; font-size: 16px; opacity: .25; transform: scaleX(-1); }
+
+    /* ===== hanging inn signboard ===== */
+    header.brand { text-align: center; padding: 14px 4px 16px; position: relative; }
+    .beam {
+      height: 16px; border-radius: 4px; margin: 0 14px;
+      background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 1px, transparent 1px 24px),
+        linear-gradient(#8b5a2b, #4a3018);
+      box-shadow: 0 4px 7px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.12);
+    }
+    .sign { position: relative; display: inline-block; transform: rotate(-4deg); transform-origin: 50% -4px; }
+    .chain { position: absolute; top: -16px; width: 4px; height: 20px; background: linear-gradient(#7a6a4a, #3a2c18); border-radius: 2px; }
+    .chain-l { left: 26%; } .chain-r { right: 26%; }
+    .board {
+      margin-top: 6px; padding: 16px 30px; border-radius: 8px; border: 3px solid var(--wood-d);
+      background:
+        repeating-linear-gradient(180deg, rgba(255,255,255,.045) 0 3px, transparent 3px 12px),
+        linear-gradient(180deg, #6f4827, #4a3018);
+      box-shadow: inset 0 0 24px rgba(0,0,0,.55), 0 11px 20px rgba(40,24,10,.45);
+    }
+    .sign-title {
+      font-family: var(--western); font-size: 30px; font-weight: 900; letter-spacing: 2px;
+      color: #ecdcae; white-space: nowrap; line-height: 1.2;
+      text-shadow: 0 2px 1px rgba(0,0,0,.7), 0 -1px 0 rgba(255,235,180,.18);
+    }
+    .sign-title .kai { font-family: var(--kai); }
+    .logo-en { margin-top: 16px; font-family: var(--western); font-size: 14px; letter-spacing: 2px;
+      color: var(--ink-soft); text-shadow: 0 1px 0 rgba(255,245,210,.4); }
+    .logo-en .kai { font-family: var(--kai); font-weight: 700; }
+
+    /* two flies buzzing around the sign (hand-drawn SVG so they always show) */
+    .fly-bug { position: absolute; z-index: 7; pointer-events: none; will-change: transform;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
+    .fly-bug.f1 { top: 22px; left: 28%; animation: buzz1 5.5s ease-in-out infinite; }
+    .fly-bug.f2 { top: 54px; right: 24%; animation: buzz2 7s ease-in-out infinite; }
+    .fly-bug.f3 { top: 40px; left: 50%; animation: buzz3 6.3s ease-in-out infinite; }
+    @keyframes buzz1 {
+      0%   { transform: translate(0,0) rotate(0deg); }
+      15%  { transform: translate(34px,-14px) rotate(18deg); }
+      32%  { transform: translate(64px,12px) rotate(-12deg); }
+      50%  { transform: translate(36px,30px) rotate(22deg); }
+      68%  { transform: translate(-14px,22px) rotate(-18deg); }
+      84%  { transform: translate(-30px,-8px) rotate(12deg); }
+      100% { transform: translate(0,0) rotate(0deg); }
+    }
+    @keyframes buzz2 {
+      0%   { transform: translate(0,0) rotate(0deg); }
+      18%  { transform: translate(-30px,16px) rotate(-16deg); }
+      36%  { transform: translate(-56px,-10px) rotate(14deg); }
+      54%  { transform: translate(-20px,-30px) rotate(-20deg); }
+      72%  { transform: translate(22px,-16px) rotate(16deg); }
+      88%  { transform: translate(34px,12px) rotate(-10deg); }
+      100% { transform: translate(0,0) rotate(0deg); }
+    }
+    @keyframes buzz3 {
+      0%   { transform: translate(0,0) rotate(0deg); }
+      16%  { transform: translate(26px,18px) rotate(20deg); }
+      34%  { transform: translate(-18px,30px) rotate(-16deg); }
+      52%  { transform: translate(-40px,-6px) rotate(14deg); }
+      70%  { transform: translate(-8px,-26px) rotate(-22deg); }
+      86%  { transform: translate(30px,-12px) rotate(12deg); }
+      100% { transform: translate(0,0) rotate(0deg); }
+    }
+
+    /* ===== Tabs as weathered plaques ===== */
+    .tabs { display: flex; gap: 10px; margin: 8px 0 16px; }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 4px; border: 2px solid #9c7b4a; border-radius: 8px;
+      background: linear-gradient(#e9dab4, #d6bd8c); cursor: pointer; transition: transform .05s ease;
+      box-shadow: inset 0 0 10px rgba(120,80,40,.3), 0 3px 6px rgba(60,40,20,.25);
+    }
+    .tab:active { transform: scale(0.96) rotate(-1deg); }
+    .tab .emoji { font-size: 28px; line-height: 1; filter: sepia(.75) saturate(1.2) brightness(.9) contrast(1.05); }
+    .tab .name { font-family: var(--western); font-size: 13px; letter-spacing: 1px; color: #6b4a2b; }
+    .tab.active { background: linear-gradient(#8b5a2b, #5e3c20); border-color: var(--wood-d);
+      box-shadow: inset 0 0 14px rgba(0,0,0,.5), 0 3px 8px rgba(40,24,10,.4); }
+    .tab.active .name { color: #f0e2c0; }
+    .tab.active .emoji { filter: sepia(.4) brightness(1.08) contrast(1.05); }
+
+    /* ===== Parchment cards ===== */
+    .card { background: linear-gradient(#f0e4c7, #e6d4ab); border: 2px solid var(--line);
+      border-radius: 10px; padding: 16px; margin-bottom: 14px; position: relative;
+      box-shadow: 0 4px 10px rgba(60,40,20,.25), inset 0 0 30px rgba(180,150,100,.18); }
+    .card h2 { font-family: var(--western); font-size: 15px; letter-spacing: .5px; color: #7a4f24; margin: 0 0 12px; }
+    label { display: block; font-family: var(--aged); font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 10px 0 5px; letter-spacing: .3px; }
+    input, select {
+      width: 100%; font-size: 16px; padding: 12px; border: 1.5px solid #a9854f; border-radius: 8px;
+      background: #fbf4e2; color: var(--ink); font-family: Georgia, var(--kai), serif;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--rust); box-shadow: 0 0 0 2px rgba(156,74,38,.2); }
+    .grid2 { display: flex; gap: 10px; }
+    .grid2 > div { flex: 1; min-width: 0; }
+    .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .check input { width: auto; }
+    .check label { margin: 0; font-size: 14px; color: var(--ink); }
+    .radios { display: flex; gap: 18px; margin-top: 5px; }
+    .radio { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
+    .radio input { width: 22px; height: 22px; accent-color: #2a1a0a; -webkit-appearance: radio; appearance: radio; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ===== Weathered site buttons ===== */
+    .site-btn {
+      display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px;
+      border: 2px solid #a9854f; border-radius: 10px; background: linear-gradient(#f3e8cd, #e7d6ac);
+      color: var(--ink); font-family: var(--aged); font-size: 16px; font-weight: 700;
+      text-decoration: none; margin-bottom: 10px; cursor: pointer; transition: transform .05s ease;
+      box-shadow: 0 2px 5px rgba(60,40,20,.2);
+    }
+    .site-btn:active { transform: scale(0.985); }
+    .site-btn .ico { font-size: 20px; width: 24px; text-align: center; filter: sepia(.7) brightness(.9) contrast(1.05); }
+    .site-btn .t { flex: 1; }
+    .site-btn .t small { display: block; font-family: Georgia, serif; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+    .site-btn.primary { color: #f3e6c6; border-color: var(--wood-d);
+      background: linear-gradient(#8b5a2b, #5e3c20); box-shadow: inset 0 0 12px rgba(0,0,0,.4), 0 3px 7px rgba(40,24,10,.35); }
+    .site-btn.primary small { color: rgba(243,230,198,.8); }
+    .site-btn.primary .ico { filter: sepia(.3) brightness(1.1); }
+
+    .note { font-family: var(--aged); font-size: 11px; color: var(--ink-soft); margin-top: 6px; line-height: 1.6; }
+    footer { text-align: center; font-family: var(--aged); font-size: 12px; color: var(--ink-soft); margin-top: 16px; }
+    .hide { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="decor cactus">🌵</div>
+  <div class="decor skull">💀</div>
+  <div class="decor bird">🦅</div>
+  <div class="decor bird2">🦅</div>
+
+  <header class="brand">
+    <div class="beam"></div>
+    <div class="sign">
+      <span class="chain chain-l"></span>
+      <span class="chain chain-r"></span>
+      <div class="board">
+        <span class="sign-title">Kuang<span class="kai">之客棧</span></span>
+      </div>
+    </div>
+    <svg class="fly-bug f1" width="30" height="19" viewBox="0 0 30 19" aria-hidden="true">
+      <ellipse cx="9" cy="6" rx="6.5" ry="3.3" fill="#cdd9e4" opacity="0.6" transform="rotate(-22 9 6)"/>
+      <ellipse cx="15" cy="6" rx="6.5" ry="3.3" fill="#cdd9e4" opacity="0.6" transform="rotate(18 15 6)"/>
+      <ellipse cx="12.5" cy="11.5" rx="6" ry="4" fill="#262626"/>
+      <circle cx="19" cy="10.4" r="3" fill="#121212"/>
+      <circle cx="18.2" cy="9.4" r="0.8" fill="#b33"/>
+    </svg>
+    <svg class="fly-bug f2" width="26" height="17" viewBox="0 0 30 19" aria-hidden="true">
+      <ellipse cx="9" cy="6" rx="6.5" ry="3.3" fill="#cdd9e4" opacity="0.6" transform="rotate(-22 9 6)"/>
+      <ellipse cx="15" cy="6" rx="6.5" ry="3.3" fill="#cdd9e4" opacity="0.6" transform="rotate(18 15 6)"/>
+      <ellipse cx="12.5" cy="11.5" rx="6" ry="4" fill="#262626"/>
+      <circle cx="19" cy="10.4" r="3" fill="#121212"/>
+      <circle cx="18.2" cy="9.4" r="0.8" fill="#b33"/>
+    </svg>
+    <svg class="fly-bug f3" width="22" height="14" viewBox="0 0 30 19" aria-hidden="true">
+      <ellipse cx="9" cy="6" rx="6.5" ry="3.3" fill="#cdd9e4" opacity="0.6" transform="rotate(-22 9 6)"/>
+      <ellipse cx="15" cy="6" rx="6.5" ry="3.3" fill="#cdd9e4" opacity="0.6" transform="rotate(18 15 6)"/>
+      <ellipse cx="12.5" cy="11.5" rx="6" ry="4" fill="#262626"/>
+      <circle cx="19" cy="10.4" r="3" fill="#121212"/>
+      <circle cx="18.2" cy="9.4" r="0.8" fill="#b33"/>
+    </svg>
+    <div class="logo-en">Eat · Sleep · Fly</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" id="tabEat"><span class="emoji">🍽️</span><span class="name">GoEat</span></button>
+    <button class="tab" id="tabSleep"><span class="emoji">🛏️</span><span class="name">GoSleep</span></button>
+    <button class="tab" id="tabFly"><span class="emoji">✈️</span><span class="name">GoFly</span></button>
+  </div>
+
+  <!-- ============ GO EAT ============ -->
+  <div class="panel active eat" id="panelEat">
+    <div class="card">
+      <h2>🍽️ Find a restaurant</h2>
+      <label>城市 City</label>
+      <select id="eatCity"><option value="">— select city —</option></select>
+
+      <label>料理 Type of food</label>
+      <select id="eatFood">
+        <option value="">不限 Any</option>
+        <option value="台式 Taiwanese">台式 Taiwanese</option>
+        <option value="泰式 Thai">泰式 Thai</option>
+        <option value="日式 Japanese">日式 Japanese</option>
+        <option value="韓式 Korean">韓式 Korean</option>
+        <option value="美式 American">美式 American</option>
+        <option value="墨西哥 Mexican">墨西哥 Mexican</option>
+        <option value="">其他 Others</option>
+      </select>
+
+      <label>類別 Category (optional)</label>
+      <select id="eatCategory">
+        <option value="">不限 Any</option>
+        <option value="牛排 steak">牛排 Steak</option>
+        <option value="壽司 sushi">壽司 Sushi</option>
+        <option value="麵 noodle">麵 Noodle</option>
+        <option value="燒烤 BBQ">燒烤 BBQ</option>
+        <option value="素食 vegetarian">素食 Vegetarian</option>
+      </select>
+
+      <label>指定餐廳名稱 Specific restaurant (optional)</label>
+      <input id="eatName" type="text" inputmode="search" placeholder="e.g. 鼎泰豐 / restaurant name" />
+
+      <label>吃到飽 Buffet</label>
+      <div class="radios">
+        <label class="radio"><input type="radio" name="eatBuffet" value="no" checked /> 否 No</label>
+        <label class="radio"><input type="radio" name="eatBuffet" value="yes" /> 是 Buffet</label>
+      </div>
+
+      <div class="grid2" style="margin-top:8px;">
+        <div>
+          <label>日期 Date</label>
+          <input id="eatDate" type="date" />
+        </div>
+        <div>
+          <label>人數 Guests</label>
+          <input id="eatGuests" type="number" min="1" value="2" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card eat">
+      <h2>Open to book</h2>
+      <a class="site-btn primary" data-eat="gmaps" target="_blank" rel="noopener">
+        <span class="ico">🗺️</span><span class="t">Google Maps<small>Find nearby + ratings + Reserve button</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-eat="eztable" target="_blank" rel="noopener">
+        <span class="ico">🍴</span><span class="t">EZTABLE<small>Taiwan online reservations</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-eat="inline" target="_blank" rel="noopener">
+        <span class="ico">📲</span><span class="t">inline<small>Find the restaurant's inline booking page</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-eat="opentable" target="_blank" rel="noopener">
+        <span class="ico">🍷</span><span class="t">OpenTable<small>International reservations (date + guests)</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-eat="tabelog" target="_blank" rel="noopener">
+        <span class="ico">🍣</span><span class="t">Tabelog<small>Japan's top restaurant guide (for trips to Japan)</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-eat="wowprime" target="_blank" rel="noopener">
+        <span class="ico">🥩</span><span class="t">王品瘋美食<small>王品集團線上訂位 (Wowprime restaurants)</small></span><span>›</span>
+      </a>
+      <div class="note">Google Maps shows the in-place “Reserve a table”. EZTABLE / inline / OpenTable open with your search — confirm the date &amp; party size on their page.</div>
+    </div>
+  </div>
+
+  <!-- ============ GO SLEEP ============ -->
+  <div class="panel sleep" id="panelSleep">
+    <div class="card">
+      <h2>🛏️ Find a hotel</h2>
+      <div class="grid2">
+        <div>
+          <label>國家 Country</label>
+          <input id="sleepCountry" type="text" placeholder="e.g. Japan" />
+        </div>
+        <div>
+          <label>城市 City</label>
+          <input id="sleepCity" type="text" placeholder="e.g. Tokyo" />
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:4px;">
+        <div>
+          <label>入住 Check-in</label>
+          <input id="sleepIn" type="date" />
+        </div>
+        <div>
+          <label>退房 Check-out</label>
+          <input id="sleepOut" type="date" />
+        </div>
+      </div>
+      <label>住客人數 Guests</label>
+      <input id="sleepGuests" type="number" min="1" value="2" />
+    </div>
+
+    <div class="card sleep">
+      <h2>Open to book</h2>
+      <a class="site-btn primary" data-sleep="booking" target="_blank" rel="noopener">
+        <span class="ico">🅱️</span><span class="t">Booking.com<small>Pre-fills city + dates + guests</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="agoda" target="_blank" rel="noopener">
+        <span class="ico">🏨</span><span class="t">Agoda<small>Strong in Asia / Taiwan</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="ghotels" target="_blank" rel="noopener">
+        <span class="ico">🔍</span><span class="t">Google Hotels<small>Compares prices across sites</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="trip" target="_blank" rel="noopener">
+        <span class="ico">🧳</span><span class="t">Trip.com<small>Popular in Asia</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="hotels" target="_blank" rel="noopener">
+        <span class="ico">🏩</span><span class="t">Hotels.com<small>Pre-fills destination + dates + guests</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="airbnb" target="_blank" rel="noopener">
+        <span class="ico">🏠</span><span class="t">Airbnb<small>Homes &amp; apartments; pre-fills dates + guests</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="klook" target="_blank" rel="noopener">
+        <span class="ico">🎟️</span><span class="t">Klook<small>Hotels &amp; stays, popular in Asia</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-sleep="kkday" target="_blank" rel="noopener">
+        <span class="ico">🗓️</span><span class="t">KKday<small>Stays &amp; travel experiences</small></span><span>›</span>
+      </a>
+      <div class="note">Booking.com pre-fills everything. The others open your destination &amp; dates — re-confirm on their page if needed.</div>
+    </div>
+  </div>
+
+  <!-- ============ GO FLY ============ -->
+  <div class="panel fly" id="panelFly">
+    <div class="card">
+      <h2>✈️ Find a flight</h2>
+      <div class="grid2">
+        <div>
+          <label>出發地 From</label>
+          <input id="flyFrom" type="text" placeholder="e.g. Taipei (TPE)" value="Taipei" />
+        </div>
+        <div>
+          <label>行程 Trip</label>
+          <select id="flyTrip">
+            <option value="round">來回 Round trip</option>
+            <option value="oneway">單程 One way</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:4px;">
+        <div>
+          <label>目的國家 Country</label>
+          <input id="flyCountry" type="text" placeholder="e.g. Japan" />
+        </div>
+        <div>
+          <label>目的城市 City</label>
+          <input id="flyCity" type="text" placeholder="e.g. Tokyo" />
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:4px;">
+        <div>
+          <label>去程 Depart</label>
+          <input id="flyDep" type="date" />
+        </div>
+        <div id="flyRetWrap">
+          <label>回程 Return</label>
+          <input id="flyRet" type="date" />
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:4px;">
+        <div>
+          <label>大人 Adults</label>
+          <input id="flyAdults" type="number" min="1" value="1" />
+        </div>
+        <div>
+          <label>兒童 Children</label>
+          <input id="flyKids" type="number" min="0" value="0" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card fly">
+      <h2>Open to book</h2>
+      <a class="site-btn primary" data-fly="gflights" target="_blank" rel="noopener">
+        <span class="ico">🛫</span><span class="t">Google Flights<small>Pre-fills route, dates &amp; passengers</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="skyscanner" target="_blank" rel="noopener">
+        <span class="ico">🔭</span><span class="t">Skyscanner<small>Compare airlines &amp; prices</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="trip" target="_blank" rel="noopener">
+        <span class="ico">🧳</span><span class="t">Trip.com<small>Asia-focused flights</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="kayak" target="_blank" rel="noopener">
+        <span class="ico">🛶</span><span class="t">Kayak<small>Flight aggregator</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="klook" target="_blank" rel="noopener">
+        <span class="ico">🎟️</span><span class="t">Klook<small>Asia flights &amp; transport</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="agoda" target="_blank" rel="noopener">
+        <span class="ico">🏨</span><span class="t">Agoda Flights<small>Handy if you use Agoda for hotels</small></span><span>›</span>
+      </a>
+      <a class="site-btn" data-fly="peach" target="_blank" rel="noopener">
+        <span class="ico">🍑</span><span class="t">Peach 樂桃<small>Low-cost carrier (Japan routes)</small></span><span>›</span>
+      </a>
+      <div class="note">Google Flights understands city names and pre-fills your trip. Skyscanner / Trip.com / Kayak open their flight search — enter the same details there.</div>
+    </div>
+  </div>
+
+  <footer>Tip: Add to Home Screen for an app icon · Bookings happen on each provider's site</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var enc = function (s) { return encodeURIComponent(s || ""); };
+  var val = function (id) { var e = el(id); return e ? (e.value || "").trim() : ""; };
+
+  // ---- Taiwan cities for the GoEat dropdown (self-contained) ----------
+  var TW_CITIES = ["臺北市","新北市","桃園市","臺中市","臺南市","高雄市","基隆市","新竹市",
+    "嘉義市","新竹縣","苗栗縣","彰化縣","南投縣","雲林縣","嘉義縣","屏東縣","宜蘭縣",
+    "花蓮縣","臺東縣","澎湖縣","金門縣","連江縣"];
+  (function fillCities() {
+    var sel = el("eatCity");
+    TW_CITIES.forEach(function (c) {
+      var o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o);
+    });
+  })();
+
+  // ---- Tabs -----------------------------------------------------------
+  var TABS = [
+    { tab: "tabEat", panel: "panelEat" },
+    { tab: "tabSleep", panel: "panelSleep" },
+    { tab: "tabFly", panel: "panelFly" }
+  ];
+  TABS.forEach(function (t) {
+    el(t.tab).addEventListener("click", function () {
+      TABS.forEach(function (x) {
+        el(x.tab).classList.toggle("active", x.tab === t.tab);
+        el(x.panel).classList.toggle("active", x.panel === t.panel);
+      });
+    });
+  });
+
+  // ---- Trip type toggles the Return date ------------------------------
+  el("flyTrip").addEventListener("change", function () {
+    el("flyRetWrap").classList.toggle("hide", el("flyTrip").value === "oneway");
+  });
+
+  // ===== GoEat link builders ===========================================
+  function eatURL(site) {
+    var city = val("eatCity"), food = val("eatFood"), category = val("eatCategory"), name = val("eatName");
+    var picked = document.querySelector('input[name="eatBuffet"]:checked');
+    var buffet = picked && picked.value === "yes";
+    var date = val("eatDate"), guests = val("eatGuests") || "2";
+
+    var terms = [];
+    if (name) terms.push(name);
+    else {
+      if (food) terms.push(food);
+      if (category) terms.push(category);
+      terms.push("餐廳 restaurant");
+    }
+    if (buffet) terms.push("吃到飽 buffet");
+    var q = terms.join(" ") + (city ? " " + city : "");
+    var kw = name || [food, category].filter(Boolean).join(" ") || "restaurant";
+
+    if (site === "gmaps")   return "https://www.google.com/maps/search/?api=1&query=" + enc(q);
+    if (site === "eztable") return "https://tw.eztable.com/search?keyword=" + enc((name || (kw + city)) || city);
+    if (site === "inline")  return "https://www.google.com/search?q=" + enc((name || (kw + " " + city)) + " inline 線上訂位");
+    if (site === "opentable") {
+      var u = "https://www.opentable.com/s?term=" + enc(kw) + "&covers=" + guests;
+      if (date) u += "&dateTime=" + date + "T19%3A00";
+      return u;
+    }
+    if (site === "tabelog")  return "https://tabelog.com/rstLst/?sw=" + enc(name || kw);
+    if (site === "wowprime") return "https://www.wowprime.com/";
+    return "#";
+  }
+
+  // ===== GoSleep link builders =========================================
+  function sleepURL(site) {
+    var country = val("sleepCountry"), city = val("sleepCity");
+    var cin = val("sleepIn"), cout = val("sleepOut"), guests = val("sleepGuests") || "2";
+    var dest = (city + " " + country).trim();
+
+    if (site === "booking") {
+      var u = "https://www.booking.com/searchresults.html?ss=" + enc(dest);
+      if (cin) u += "&checkin=" + cin;
+      if (cout) u += "&checkout=" + cout;
+      u += "&group_adults=" + guests + "&group_children=0&no_rooms=1";
+      return u;
+    }
+    if (site === "agoda") {
+      var a = "https://www.agoda.com/search?textToSearch=" + enc(dest) + "&adults=" + guests;
+      if (cin) a += "&checkIn=" + cin;
+      if (cout) a += "&checkOut=" + cout;
+      return a;
+    }
+    if (site === "ghotels") return "https://www.google.com/travel/search?q=" + enc("hotels in " + dest);
+    if (site === "trip") {
+      var t = "https://www.trip.com/hotels/list?searchWord=" + enc(dest);
+      if (cin) t += "&checkin=" + cin.replace(/-/g, "/");
+      if (cout) t += "&checkout=" + cout.replace(/-/g, "/");
+      return t;
+    }
+    if (site === "hotels") {
+      var h = "https://www.hotels.com/Hotel-Search?destination=" + enc(dest) + "&adults=" + guests;
+      if (cin) h += "&startDate=" + cin;
+      if (cout) h += "&endDate=" + cout;
+      return h;
+    }
+    if (site === "airbnb") {
+      var ab = "https://www.airbnb.com/s/" + enc(dest) + "/homes?adults=" + guests;
+      if (cin) ab += "&checkin=" + cin;
+      if (cout) ab += "&checkout=" + cout;
+      return ab;
+    }
+    if (site === "klook") return "https://www.klook.com/search/?query=" + enc(dest + " hotel");
+    if (site === "kkday") return "https://www.kkday.com/en/search?keyword=" + enc(dest + " hotel");
+    return "#";
+  }
+
+  // ===== GoFly link builders ===========================================
+  function flyURL(site) {
+    var from = val("flyFrom") || "Taipei";
+    var to = (val("flyCity") + " " + val("flyCountry")).trim() || val("flyCountry");
+    var trip = val("flyTrip"), dep = val("flyDep"), ret = val("flyRet");
+    var adults = val("flyAdults") || "1", kids = val("flyKids") || "0";
+
+    if (site === "gflights") {
+      var q = "flights from " + from + " to " + to;
+      if (dep) q += " on " + dep;
+      if (trip === "round" && ret) q += " returning " + ret;
+      q += " for " + adults + " adults";
+      if (parseInt(kids, 10) > 0) q += " " + kids + " children";
+      return "https://www.google.com/travel/flights?q=" + enc(q);
+    }
+    // These need airport codes we can't derive from free text, so open their
+    // flight search page for the user to finish entering the trip.
+    if (site === "skyscanner") return "https://www.skyscanner.net/transport/flights/";
+    if (site === "trip")       return "https://www.trip.com/flights/";
+    if (site === "kayak")      return "https://www.kayak.com/flights";
+    if (site === "klook")      return "https://www.klook.com/search/?query=" + enc(to + " flights");
+    if (site === "agoda")      return "https://www.agoda.com/flights/";
+    if (site === "peach")      return "https://www.flypeach.com/";
+    return "#";
+  }
+
+  // ---- Wire all site buttons to set their href on tap -----------------
+  function wire(attr, builder) {
+    var nodes = document.querySelectorAll("[data-" + attr + "]");
+    Array.prototype.forEach.call(nodes, function (node) {
+      node.addEventListener("click", function (e) {
+        e.preventDefault();
+        var url = builder(node.getAttribute("data-" + attr));
+        if (url && url !== "#") window.open(url, "_blank");
+      });
+    });
+  }
+  wire("eat", eatURL);
+  wire("sleep", sleepURL);
+  wire("fly", flyURL);
+})();
+</script>
+</body>
+</html>
