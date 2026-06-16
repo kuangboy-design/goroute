@@ -78,6 +78,20 @@
       color: var(--ink-soft); text-shadow: 0 1px 0 rgba(255,245,210,.4); }
     .logo-en .kai { font-family: var(--kai); font-weight: 700; }
 
+    /* cobweb in the corner near the flies */
+    .cobweb { position: absolute; top: 0; left: 0; z-index: 4; pointer-events: none; opacity: .8;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+
+    /* cute spider dangling on a thread, bobbing up & down */
+    .spider-rig { position: absolute; top: 4px; left: 64px; z-index: 6; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; }
+    .spider-rig .thread { width: 1.5px; height: 20px; background: linear-gradient(#dde4ea, #aab4bf);
+      animation: spiderDrop 3.2s ease-in-out infinite; }
+    .spider-rig .spider { margin-top: -1px; transform-origin: 50% -20px;
+      animation: spiderSway 3.2s ease-in-out infinite; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+    @keyframes spiderDrop { 0%, 100% { height: 18px; } 50% { height: 104px; } }
+    @keyframes spiderSway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+
     /* two flies buzzing around the sign (hand-drawn SVG so they always show) */
     .fly-bug { position: absolute; z-index: 7; pointer-events: none; will-change: transform;
       filter: drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
@@ -86,29 +100,29 @@
     .fly-bug.f3 { top: 40px; left: 50%; animation: buzz3 6.3s ease-in-out infinite; }
     @keyframes buzz1 {
       0%   { transform: translate(0,0) rotate(0deg); }
-      15%  { transform: translate(34px,-14px) rotate(18deg); }
-      32%  { transform: translate(64px,12px) rotate(-12deg); }
-      50%  { transform: translate(36px,30px) rotate(22deg); }
-      68%  { transform: translate(-14px,22px) rotate(-18deg); }
-      84%  { transform: translate(-30px,-8px) rotate(12deg); }
+      15%  { transform: translate(64px,-30px) rotate(18deg); }
+      32%  { transform: translate(120px,20px) rotate(-12deg); }
+      50%  { transform: translate(70px,58px) rotate(22deg); }
+      68%  { transform: translate(-34px,44px) rotate(-18deg); }
+      84%  { transform: translate(-64px,-18px) rotate(12deg); }
       100% { transform: translate(0,0) rotate(0deg); }
     }
     @keyframes buzz2 {
       0%   { transform: translate(0,0) rotate(0deg); }
-      18%  { transform: translate(-30px,16px) rotate(-16deg); }
-      36%  { transform: translate(-56px,-10px) rotate(14deg); }
-      54%  { transform: translate(-20px,-30px) rotate(-20deg); }
-      72%  { transform: translate(22px,-16px) rotate(16deg); }
-      88%  { transform: translate(34px,12px) rotate(-10deg); }
+      18%  { transform: translate(-58px,30px) rotate(-16deg); }
+      36%  { transform: translate(-110px,-22px) rotate(14deg); }
+      54%  { transform: translate(-44px,-58px) rotate(-20deg); }
+      72%  { transform: translate(46px,-30px) rotate(16deg); }
+      88%  { transform: translate(70px,24px) rotate(-10deg); }
       100% { transform: translate(0,0) rotate(0deg); }
     }
     @keyframes buzz3 {
       0%   { transform: translate(0,0) rotate(0deg); }
-      16%  { transform: translate(26px,18px) rotate(20deg); }
-      34%  { transform: translate(-18px,30px) rotate(-16deg); }
-      52%  { transform: translate(-40px,-6px) rotate(14deg); }
-      70%  { transform: translate(-8px,-26px) rotate(-22deg); }
-      86%  { transform: translate(30px,-12px) rotate(12deg); }
+      16%  { transform: translate(52px,36px) rotate(20deg); }
+      34%  { transform: translate(-36px,60px) rotate(-16deg); }
+      52%  { transform: translate(-80px,-14px) rotate(14deg); }
+      70%  { transform: translate(-18px,-52px) rotate(-22deg); }
+      86%  { transform: translate(60px,-26px) rotate(12deg); }
       100% { transform: translate(0,0) rotate(0deg); }
     }
 
@@ -149,6 +163,13 @@
     .radio { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
     .radio input { width: 22px; height: 22px; accent-color: #2a1a0a; -webkit-appearance: radio; appearance: radio; }
 
+    /* + / − quantity stepper */
+    .stepper { display: inline-flex; align-items: center; border: 1.5px solid #a9854f; border-radius: 8px; overflow: hidden; background: #fbf4e2; }
+    .step-btn { width: 46px; height: 46px; border: none; background: #ecdcb8; color: var(--ink); font-size: 24px; font-weight: 700; line-height: 1; cursor: pointer; font-family: Georgia, serif; }
+    .step-btn:active { background: #dcc89a; }
+    .stepper .step-val { width: 56px; min-width: 56px; text-align: center; border: none; background: transparent; font-size: 18px; font-weight: 700; padding: 11px 0; border-radius: 0; }
+    .stepper .step-val:focus { outline: none; box-shadow: none; border: none; }
+
     .panel { display: none; }
     .panel.active { display: block; }
 
@@ -181,6 +202,51 @@
   <div class="decor bird2">🦅</div>
 
   <header class="brand">
+    <svg class="cobweb" width="124" height="124" viewBox="0 0 78 78" aria-hidden="true">
+      <g stroke="#3f4a55" stroke-width="0.9" fill="none" opacity="0.9">
+        <line x1="0" y1="0" x2="78" y2="7"/>
+        <line x1="0" y1="0" x2="75" y2="23"/>
+        <line x1="0" y1="0" x2="68" y2="39"/>
+        <line x1="0" y1="0" x2="57" y2="53"/>
+        <line x1="0" y1="0" x2="44" y2="65"/>
+        <line x1="0" y1="0" x2="29" y2="72"/>
+        <line x1="0" y1="0" x2="14" y2="77"/>
+        <line x1="0" y1="0" x2="7" y2="78"/>
+        <path d="M12 3 Q 9 9 3 12"/>
+        <path d="M20 3 Q 15 15 3 20"/>
+        <path d="M30 4 Q 22 22 4 30"/>
+        <path d="M42 5 Q 31 31 5 42"/>
+        <path d="M54 7 Q 40 40 7 54"/>
+        <path d="M66 9 Q 49 49 9 66"/>
+        <path d="M75 12 Q 56 56 12 75"/>
+      </g>
+    </svg>
+    <div class="spider-rig">
+      <div class="thread"></div>
+      <svg class="spider" width="42" height="36" viewBox="0 0 44 38" aria-hidden="true">
+        <g stroke="#3a3340" stroke-width="2.2" fill="none" stroke-linecap="round">
+          <path d="M15 20 q -9 -2 -12 -9"/>
+          <path d="M15 23 q -10 1 -13 -3"/>
+          <path d="M15 26 q -9 4 -12 9"/>
+          <path d="M16 28 q -6 6 -7 12"/>
+          <path d="M29 20 q 9 -2 12 -9"/>
+          <path d="M29 23 q 10 1 13 -3"/>
+          <path d="M29 26 q 9 4 12 9"/>
+          <path d="M28 28 q 6 6 7 12"/>
+        </g>
+        <circle cx="22" cy="23" r="11" fill="#4a4458"/>
+        <circle cx="22" cy="23" r="11" fill="none" stroke="#5d566e" stroke-width="1"/>
+        <circle cx="18" cy="21" r="3.6" fill="#fff"/>
+        <circle cx="26" cy="21" r="3.6" fill="#fff"/>
+        <circle cx="18.7" cy="21.7" r="1.7" fill="#1a1a1a"/>
+        <circle cx="26.7" cy="21.7" r="1.7" fill="#1a1a1a"/>
+        <circle cx="17.6" cy="20.4" r="0.7" fill="#fff"/>
+        <circle cx="25.6" cy="20.4" r="0.7" fill="#fff"/>
+        <circle cx="13.8" cy="26" r="1.9" fill="#e98aa0" opacity="0.75"/>
+        <circle cx="30.2" cy="26" r="1.9" fill="#e98aa0" opacity="0.75"/>
+        <path d="M19 27.5 q 3 2.6 6 0" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
     <div class="beam"></div>
     <div class="sign">
       <span class="chain chain-l"></span>
@@ -264,7 +330,11 @@
         </div>
         <div>
           <label>人數 Guests</label>
-          <input id="eatGuests" type="number" min="1" value="2" />
+          <div class="stepper">
+            <button type="button" class="step-btn" data-target="eatGuests" data-step="-1">−</button>
+            <input class="step-val" id="eatGuests" type="text" inputmode="numeric" readonly value="2" data-min="1" data-max="20" />
+            <button type="button" class="step-btn" data-target="eatGuests" data-step="1">+</button>
+          </div>
         </div>
       </div>
     </div>
@@ -300,11 +370,11 @@
       <div class="grid2">
         <div>
           <label>國家 Country</label>
-          <input id="sleepCountry" type="text" placeholder="e.g. Japan" />
+          <select id="sleepCountry"><option value="">— Country —</option></select>
         </div>
         <div>
           <label>城市 City</label>
-          <input id="sleepCity" type="text" placeholder="e.g. Tokyo" />
+          <select id="sleepCity"><option value="">— City —</option></select>
         </div>
       </div>
       <div class="grid2" style="margin-top:4px;">
@@ -318,7 +388,11 @@
         </div>
       </div>
       <label>住客人數 Guests</label>
-      <input id="sleepGuests" type="number" min="1" value="2" />
+      <div class="stepper">
+        <button type="button" class="step-btn" data-target="sleepGuests" data-step="-1">−</button>
+        <input class="step-val" id="sleepGuests" type="text" inputmode="numeric" readonly value="2" data-min="1" data-max="20" />
+        <button type="button" class="step-btn" data-target="sleepGuests" data-step="1">+</button>
+      </div>
     </div>
 
     <div class="card sleep">
@@ -355,27 +429,23 @@
   <div class="panel fly" id="panelFly">
     <div class="card">
       <h2>✈️ Find a flight</h2>
-      <div class="grid2">
-        <div>
-          <label>出發地 From</label>
-          <input id="flyFrom" type="text" placeholder="e.g. Taipei (TPE)" value="Taipei" />
-        </div>
-        <div>
-          <label>行程 Trip</label>
-          <select id="flyTrip">
-            <option value="round">來回 Round trip</option>
-            <option value="oneway">單程 One way</option>
-          </select>
-        </div>
+      <label>出發地 From</label>
+      <select id="flyFrom"></select>
+
+      <label>行程 Trip</label>
+      <div class="radios">
+        <label class="radio"><input type="radio" name="flyTrip" value="round" checked /> 來回 Round trip</label>
+        <label class="radio"><input type="radio" name="flyTrip" value="oneway" /> 單程 One way</label>
       </div>
-      <div class="grid2" style="margin-top:4px;">
+
+      <div class="grid2" style="margin-top:10px;">
         <div>
           <label>目的國家 Country</label>
-          <input id="flyCountry" type="text" placeholder="e.g. Japan" />
+          <select id="flyCountry"><option value="">— Country —</option></select>
         </div>
         <div>
           <label>目的城市 City</label>
-          <input id="flyCity" type="text" placeholder="e.g. Tokyo" />
+          <select id="flyCity"><option value="">— City —</option></select>
         </div>
       </div>
       <div class="grid2" style="margin-top:4px;">
@@ -391,11 +461,19 @@
       <div class="grid2" style="margin-top:4px;">
         <div>
           <label>大人 Adults</label>
-          <input id="flyAdults" type="number" min="1" value="1" />
+          <div class="stepper">
+            <button type="button" class="step-btn" data-target="flyAdults" data-step="-1">−</button>
+            <input class="step-val" id="flyAdults" type="text" inputmode="numeric" readonly value="1" data-min="1" data-max="20" />
+            <button type="button" class="step-btn" data-target="flyAdults" data-step="1">+</button>
+          </div>
         </div>
         <div>
           <label>兒童 Children</label>
-          <input id="flyKids" type="number" min="0" value="0" />
+          <div class="stepper">
+            <button type="button" class="step-btn" data-target="flyKids" data-step="-1">−</button>
+            <input class="step-val" id="flyKids" type="text" inputmode="numeric" readonly value="0" data-min="0" data-max="10" />
+            <button type="button" class="step-btn" data-target="flyKids" data-step="1">+</button>
+          </div>
         </div>
       </div>
     </div>
@@ -447,6 +525,80 @@
     });
   })();
 
+  // ---- Countries -> cities for GoSleep & GoFly ------------------------
+  var COUNTRIES = {
+    "Taiwan": ["Taipei","New Taipei","Taoyuan","Taichung","Tainan","Kaohsiung","Hsinchu","Chiayi","Keelung","Hualien","Taitung","Kinmen","Penghu"],
+    "Japan": ["Tokyo","Osaka","Kyoto","Nagoya","Sapporo","Fukuoka","Okinawa (Naha)","Nara","Yokohama","Hiroshima","Sendai","Kanazawa"],
+    "South Korea": ["Seoul","Busan","Jeju","Incheon","Daegu","Gyeongju"],
+    "Hong Kong": ["Hong Kong"],
+    "Macau": ["Macau"],
+    "China": ["Shanghai","Beijing","Guangzhou","Shenzhen","Chengdu","Hangzhou","Xiamen","Xi'an","Suzhou"],
+    "Thailand": ["Bangkok","Chiang Mai","Phuket","Pattaya","Krabi"],
+    "Vietnam": ["Ho Chi Minh City","Hanoi","Da Nang","Nha Trang","Hoi An","Phu Quoc"],
+    "Singapore": ["Singapore"],
+    "Malaysia": ["Kuala Lumpur","Penang","Kota Kinabalu","Langkawi","Malacca"],
+    "Philippines": ["Manila","Cebu","Boracay","Bohol","Palawan"],
+    "Indonesia": ["Bali (Denpasar)","Jakarta","Yogyakarta","Surabaya"],
+    "Cambodia": ["Siem Reap","Phnom Penh"],
+    "India": ["Delhi","Mumbai","Bangalore","Goa"],
+    "United Arab Emirates": ["Dubai","Abu Dhabi"],
+    "Australia": ["Sydney","Melbourne","Brisbane","Gold Coast","Perth","Cairns"],
+    "New Zealand": ["Auckland","Queenstown","Christchurch","Wellington"],
+    "United States": ["Los Angeles","San Francisco","New York","Las Vegas","Seattle","Honolulu","Chicago","Boston","Washington D.C.","Orlando"],
+    "Canada": ["Vancouver","Toronto","Montreal","Calgary"],
+    "United Kingdom": ["London","Manchester","Edinburgh"],
+    "France": ["Paris","Nice","Lyon","Marseille"],
+    "Germany": ["Frankfurt","Munich","Berlin","Hamburg"],
+    "Italy": ["Rome","Milan","Venice","Florence","Naples"],
+    "Spain": ["Madrid","Barcelona","Seville"],
+    "Netherlands": ["Amsterdam"],
+    "Switzerland": ["Zurich","Geneva","Interlaken"],
+    "Turkey": ["Istanbul","Antalya"]
+  };
+  function fillCountries(countryId, cityId) {
+    var cSel = el(countryId), citySel = el(cityId);
+    Object.keys(COUNTRIES).forEach(function (c) {
+      var o = document.createElement("option"); o.value = c; o.textContent = c; cSel.appendChild(o);
+    });
+    cSel.addEventListener("change", function () {
+      citySel.innerHTML = '<option value="">— City —</option>';
+      (COUNTRIES[cSel.value] || []).forEach(function (ct) {
+        var o = document.createElement("option"); o.value = ct; o.textContent = ct; citySel.appendChild(o);
+      });
+    });
+  }
+  function fillFromCities() {
+    var sel = el("flyFrom");
+    Object.keys(COUNTRIES).forEach(function (c) {
+      var g = document.createElement("optgroup"); g.label = c;
+      COUNTRIES[c].forEach(function (ct) {
+        var o = document.createElement("option"); o.value = ct; o.textContent = ct;
+        if (ct === "Taipei") o.selected = true;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    });
+  }
+  function fillNums(id, start, end, def) {
+    var s = el(id);
+    for (var i = start; i <= end; i++) {
+      var o = document.createElement("option"); o.value = i; o.textContent = i;
+      if (i === def) o.selected = true;
+      s.appendChild(o);
+    }
+  }
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+  function addDays(str, n) {
+    var p = str.split("-");
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    d.setDate(d.getDate() + n);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
   // ---- Tabs -----------------------------------------------------------
   var TABS = [
     { tab: "tabEat", panel: "panelEat" },
@@ -462,9 +614,50 @@
     });
   });
 
-  // ---- Trip type toggles the Return date ------------------------------
-  el("flyTrip").addEventListener("change", function () {
-    el("flyRetWrap").classList.toggle("hide", el("flyTrip").value === "oneway");
+  // ---- Populate dropdowns --------------------------------------------
+  fillCountries("flyCountry", "flyCity");
+  fillCountries("sleepCountry", "sleepCity");
+  fillFromCities();
+
+  // + / − steppers for guests / adults / children
+  Array.prototype.forEach.call(document.querySelectorAll(".step-btn"), function (btn) {
+    btn.addEventListener("click", function () {
+      var inp = el(btn.getAttribute("data-target"));
+      var step = parseInt(btn.getAttribute("data-step"), 10);
+      var min = parseInt(inp.getAttribute("data-min"), 10);
+      var max = parseInt(inp.getAttribute("data-max"), 10);
+      var v = (parseInt(inp.value, 10) || min) + step;
+      inp.value = Math.max(min, Math.min(max, v));
+    });
+  });
+
+  // ---- Trip type (radio) toggles the Return date ----------------------
+  function flyTripVal() {
+    var r = document.querySelector('input[name="flyTrip"]:checked');
+    return r ? r.value : "round";
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="flyTrip"]'), function (r) {
+    r.addEventListener("change", function () {
+      el("flyRetWrap").classList.toggle("hide", flyTripVal() === "oneway");
+    });
+  });
+
+  // ---- Date constraints: today minimum + return/checkout after start --
+  var today = todayStr();
+  ["flyDep", "flyRet", "sleepIn", "sleepOut"].forEach(function (id) { el(id).min = today; });
+
+  el("flyDep").addEventListener("change", function () {
+    var d = el("flyDep").value;
+    if (!d) return;
+    el("flyRet").min = d;                                    // return on/after depart
+    if (el("flyRet").value && el("flyRet").value < d) el("flyRet").value = d;
+  });
+  el("sleepIn").addEventListener("change", function () {
+    var d = el("sleepIn").value;
+    if (!d) return;
+    var next = addDays(d, 1);                                // check-out at least 1 night later
+    el("sleepOut").min = next;
+    if (!el("sleepOut").value || el("sleepOut").value <= d) el("sleepOut").value = next;
   });
 
   // ===== GoEat link builders ===========================================
@@ -545,7 +738,7 @@
   function flyURL(site) {
     var from = val("flyFrom") || "Taipei";
     var to = (val("flyCity") + " " + val("flyCountry")).trim() || val("flyCountry");
-    var trip = val("flyTrip"), dep = val("flyDep"), ret = val("flyRet");
+    var trip = flyTripVal(), dep = val("flyDep"), ret = val("flyRet");
     var adults = val("flyAdults") || "1", kids = val("flyKids") || "0";
 
     if (site === "gflights") {
