@@ -483,9 +483,17 @@
     el("routesHint").classList.remove("hidden");
 
     // The address the user actually entered (Taiwan style, contiguous). OSM
-    // often lacks house numbers here, so we DISPLAY this full typed address
-    // while still routing with the coordinates the geocoder returned.
-    var typedAddr = [city, district, addr].filter(Boolean).join("");
+    // often lacks house numbers here, so we DISPLAY/navigate with this full
+    // typed text. Avoid duplicating City/District if already typed in the box.
+    var typedAddr;
+    if (addr) {
+      var pre = "";
+      if (city && addr.indexOf(city) === -1) pre += city;
+      if (district && addr.indexOf(district) === -1) pre += district;
+      typedAddr = pre + addr;
+    } else {
+      typedAddr = city + district;
+    }
 
     geocodeFirst(queries).then(function (res) {
       if (!res) {
