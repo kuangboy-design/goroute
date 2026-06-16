@@ -424,7 +424,10 @@
     if (!dest) return "#";
     var base = "https://www.google.com/maps/dir/?api=1";
     var origin = here ? ("&origin=" + here.lat + "," + here.lon) : "";
-    var url = base + origin + "&destination=" + dest.lat + "," + dest.lon +
+    // Send the typed ADDRESS TEXT (not OSM coords) so Google's own geocoder
+    // resolves the exact Taiwan address instead of an approximate point.
+    var destParam = encodeURIComponent(dest.query || dest.label);
+    var url = base + origin + "&destination=" + destParam +
               "&travelmode=" + opts.mode;
     if (opts.avoid) url += "&avoid=" + opts.avoid;
     return url;
@@ -494,6 +497,7 @@
         lat: res.lat,
         lon: res.lon,
         label: typedAddr || res.label,   // prefer the full address you typed
+        query: typedAddr || res.label,   // text sent to Google Maps for navigation
         matched: res.label               // what the map actually matched (for reference)
       });
     });
@@ -595,7 +599,7 @@
         if (favEditMode) {
           if (!dest) { favSay("請先搜尋地點 — search a place first, then tap an icon.", true); return; }
           var f = loadFavs();
-          f[k] = { lat: dest.lat, lon: dest.lon, label: dest.label };
+          f[k] = { lat: dest.lat, lon: dest.lon, label: dest.label, query: dest.query || dest.label };
           saveFavs(f);
           renderFavs();
           setEditMode(false);
