@@ -35,9 +35,10 @@
     h1 { font-size: 26px; margin: 0; letter-spacing: -0.5px; }
     h1 span { color: var(--blue); }
     .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
-    .switch-link { display: inline-block; margin-top: 12px; padding: 9px 16px; border-radius: 999px;
-      background: #e8f0fe; color: var(--blue); font-size: 14px; font-weight: 600; text-decoration: none;
-      border: 1px solid #d6e4fc; }
+    .nav-row { display: flex; gap: 8px; margin-top: 12px; }
+    .switch-link { flex: 1; text-align: center; padding: 9px 8px; border-radius: 999px;
+      background: #e8f0fe; color: var(--blue); font-size: 13px; font-weight: 600; text-decoration: none;
+      border: 1px solid #d6e4fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .switch-link:active { background: #d6e4fc; }
 
     .card {
@@ -158,8 +159,10 @@
   <header>
     <h1>Go<span>Route</span></h1>
     <div class="sub">Your location, the weather, and one tap to navigate.</div>
-    <a class="switch-link" href="services.html">🍽️ 吃喝玩樂 · Kuang之客棧 →</a>
-    <a class="switch-link" href="tickets.html">🎟️ 售票快訊 · GoTicket →</a>
+    <div class="nav-row">
+      <a class="switch-link" href="services.html">🍽️ Kuang之客棧</a>
+      <a class="switch-link" href="tickets.html">🎟️ GoTicket 售票</a>
+    </div>
   </header>
 
   <!-- CURRENT LOCATION + WEATHER -->
