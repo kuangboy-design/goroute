@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#d6336c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GoTicket" />
+  <title>GoTicket · 售票快訊</title>
+  <style>
+    :root {
+      --accent: #8f7280; --accent-d: #6a525d;
+      --bg: #f2eff1; --card: #fff; --text: #211b25; --muted: #6b6470; --line: #e3dde0;
+      --ok: #2b8a3e;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0 auto; max-width: 560px; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", Roboto, sans-serif;
+      padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px);
+    }
+    header { padding: 20px 4px 8px; }
+    h1 { font-size: 25px; margin: 0; letter-spacing: -0.5px; }
+    h1 span { color: var(--accent); }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .nav { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .nav a { font-size: 13px; padding: 8px 13px; border-radius: 999px; text-decoration: none;
+      background: #ece4e8; color: var(--accent-d); border: 1px solid var(--line); font-weight: 600; }
+
+    /* NBA-style admission ticket header */
+    .ticket { position: relative; display: flex; border-radius: 14px; overflow: hidden;
+      background: linear-gradient(135deg, #e9dee3 0%, #d6c6cd 100%);
+      border: 1px solid #c9b6bf; box-shadow: 0 6px 16px rgba(110,87,98,.22); }
+    .ticket-main { flex: 1; padding: 20px 18px; }
+    .ticket-main h1 { color: #3f323a; }
+    .ticket-main h1 span { color: var(--accent-d); }
+    .ticket-main .sub { color: #6a5b63; }
+    .ticket-stub { width: 66px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; background: rgba(255,255,255,.28); border-left: 2px dashed #ad909c; position: relative; }
+    .ticket-stub .bball { font-size: 28px; filter: grayscale(.35) contrast(1.05); }
+    .ticket-stub .admit { writing-mode: vertical-rl; text-orientation: mixed; font-size: 11px; font-weight: 800;
+      letter-spacing: 3px; color: #6a525d; }
+    .ticket-stub::before, .ticket-stub::after { content: ""; position: absolute; left: -9px; width: 16px; height: 16px;
+      border-radius: 50%; background: var(--bg); }
+    .ticket-stub::before { top: -9px; }
+    .ticket-stub::after { bottom: -9px; }
+
+    .badge-bar { display: flex; align-items: center; gap: 10px; background: linear-gradient(#efe7ea,#e6dadf);
+      border: 1px solid #d6c5cc; border-radius: 14px; padding: 12px 14px; margin: 8px 0 14px; cursor: pointer; }
+    .badge-num { background: var(--accent); color: #fff; font-weight: 800; font-size: 16px; min-width: 30px; height: 30px;
+      border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+    .badge-txt { font-size: 14px; font-weight: 600; }
+
+    .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 0 0 12px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 10px 0 5px; }
+    input, select {
+      width: 100%; font-size: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; color: var(--text); -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 10px; background: var(--accent);
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    .btn:active { transform: scale(.99); }
+
+    .tabs { display: flex; gap: 8px; margin: 4px 0 14px; }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 2px;
+      border: 1px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer; }
+    .tab .emoji { font-size: 24px; }
+    .tab .name { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .tab.active { background: var(--accent); border-color: var(--accent); }
+    .tab.active .name { color: #fff; }
+    .panel { display: none; } .panel.active { display: block; }
+
+    .site-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 15px; border: 1px solid var(--line);
+      border-radius: 12px; background: #fff; color: var(--text); font-size: 15px; font-weight: 600; text-decoration: none; margin-bottom: 9px; }
+    .site-btn:active { transform: scale(.985); }
+    .site-btn .ico { font-size: 19px; width: 24px; text-align: center; }
+    .site-btn .t { flex: 1; }
+    .site-btn .t small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+
+    .wl-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #fcfbfd; }
+    .wl-name { font-weight: 700; font-size: 15px; }
+    .wl-when { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .wl-count { font-size: 17px; font-weight: 800; color: var(--accent); margin: 6px 0; font-variant-numeric: tabular-nums; }
+    .wl-count.live { color: var(--ok); }
+    .wl-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .wl-actions a, .wl-actions button { font-size: 13px; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--line);
+      background: #fff; color: var(--text); text-decoration: none; font-weight: 600; cursor: pointer; }
+    .wl-actions .buy { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+    .empty { color: var(--muted); font-size: 13px; }
+    footer { text-align: center; font-size: 11px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+    .disclaimer { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--accent);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; text-align: left; font-size: 12px;
+      color: var(--text); line-height: 1.7; }
+    .disclaimer strong { color: var(--accent-d); }
+    .dis-hr { border: none; border-top: 1px dashed var(--line); margin: 9px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="ticket">
+      <div class="ticket-main">
+        <h1>Go<span>Ticket</span> · 售票快訊</h1>
+        <div class="sub">看誰要來台灣演出 · 開賣倒數提醒 · 一鍵到官方售票頁</div>
+      </div>
+      <div class="ticket-stub">
+        <span class="bball">🏀</span>
+        <span class="admit">ADMIT ONE</span>
+      </div>
+    </div>
+    <div class="nav">
+      <a href="index.html">🧭 GoRoute</a>
+      <a href="services.html">🍽️ Kuang之客棧</a>
+    </div>
+  </header>
+
+  <div class="badge-bar" id="badgeBar">
+    <span class="badge-num" id="badgeNum">0</span>
+    <span class="badge-txt" id="badgeTxt">目前沒有追蹤的活動 — 在下方加入想搶的票</span>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="card">
+    <h2>🔎 搜尋售票資訊</h2>
+    <label>藝人 / 隊伍 / 活動名稱</label>
+    <input id="kw" type="text" inputmode="search" placeholder="例如 Coldplay、中信兄弟、五月天" />
+    <button class="btn" id="searchBtn">Google 搜尋售票資訊</button>
+    <div class="note">會搜尋「關鍵字 + 售票」,幫你快速找到官方開賣頁與開賣時間。</div>
+  </div>
+
+  <!-- CATEGORY TABS -->
+  <div class="tabs">
+    <button class="tab active" id="tabCon"><span class="emoji">🎵</span><span class="name">演唱會</span></button>
+    <button class="tab" id="tabBase"><span class="emoji">⚾</span><span class="name">棒球</span></button>
+    <button class="tab" id="tabBask"><span class="emoji">🏀</span><span class="name">籃球</span></button>
+    <button class="tab" id="tabShow"><span class="emoji">🎭</span><span class="name">表演</span></button>
+  </div>
+
+  <!-- CONCERTS -->
+  <div class="panel active" id="panelCon">
+    <div class="card">
+      <h2>🎵 演唱會 售票平台</h2>
+      <a class="site-btn" href="https://tixcraft.com/activity" target="_blank" rel="noopener"><span class="ico">🎟️</span><span class="t">拓元 tixCraft<small>演唱會/大型活動最常用</small></span><span>›</span></a>
+      <a class="site-btn" href="https://kktix.com/events" target="_blank" rel="noopener"><span class="ico">🎫</span><span class="t">KKTIX<small>KKBOX 旗下,展演活動多</small></span><span>›</span></a>
+      <a class="site-btn" href="https://kham.com.tw/" target="_blank" rel="noopener"><span class="ico">🎶</span><span class="t">寬宏 KHAM<small>演唱會與展演</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.ticket.com.tw/" target="_blank" rel="noopener"><span class="ico">📅</span><span class="t">年代售票<small>ERA Ticket</small></span><span>›</span></a>
+      <a class="site-btn" href="https://tickets.udnfunlife.com/" target="_blank" rel="noopener"><span class="ico">🗞️</span><span class="t">udn 售票網<small>聯合報系</small></span><span>›</span></a>
+      <a class="site-btn" href="https://ticket.ibon.com.tw/" target="_blank" rel="noopener"><span class="ico">🏪</span><span class="t">ibon 售票<small>7-11 ibon</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.famiticket.com.tw/" target="_blank" rel="noopener"><span class="ico">🛒</span><span class="t">FamiTicket 全網<small>全家</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.accupass.com/" target="_blank" rel="noopener"><span class="ico">🎉</span><span class="t">Accupass 活動通<small>各式活動</small></span><span>›</span></a>
+    </div>
+  </div>
+
+  <!-- BASEBALL -->
+  <div class="panel" id="panelBase">
+    <div class="card">
+      <h2>⚾ 棒球 賽程與售票</h2>
+      <a class="site-btn" href="https://www.cpbl.com.tw/schedule" target="_blank" rel="noopener"><span class="ico">📆</span><span class="t">中華職棒 CPBL 賽程<small>官方賽程表</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.cpbl.com.tw/" target="_blank" rel="noopener"><span class="ico">⚾</span><span class="t">CPBL 官網<small>各隊售票連結</small></span><span>›</span></a>
+      <a class="site-btn" href="https://tixcraft.com/activity" target="_blank" rel="noopener"><span class="ico">🎟️</span><span class="t">拓元 tixCraft<small>多隊主場售票</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.famiticket.com.tw/" target="_blank" rel="noopener"><span class="ico">🛒</span><span class="t">FamiTicket 全網<small>部分球隊售票</small></span><span>›</span></a>
+    </div>
+  </div>
+
+  <!-- BASKETBALL -->
+  <div class="panel" id="panelBask">
+    <div class="card">
+      <h2>🏀 籃球 賽事與售票</h2>
+      <a class="site-btn" href="https://pleagueofficial.com/" target="_blank" rel="noopener"><span class="ico">🏀</span><span class="t">P. LEAGUE+<small>官方網站與賽程</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.t1league.com/" target="_blank" rel="noopener"><span class="ico">🏀</span><span class="t">T1 League<small>官方網站</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.famiticket.com.tw/" target="_blank" rel="noopener"><span class="ico">🛒</span><span class="t">FamiTicket 全網<small>球賽售票</small></span><span>›</span></a>
+      <a class="site-btn" href="https://tixcraft.com/activity" target="_blank" rel="noopener"><span class="ico">🎟️</span><span class="t">拓元 tixCraft<small>部分球賽售票</small></span><span>›</span></a>
+    </div>
+  </div>
+
+  <!-- SHOWS -->
+  <div class="panel" id="panelShow">
+    <div class="card">
+      <h2>🎭 表演 / 展覽 售票平台</h2>
+      <a class="site-btn" href="https://www.opentix.life/" target="_blank" rel="noopener"><span class="ico">🎭</span><span class="t">OPENTIX 兩廳院<small>表演藝術主要平台</small></span><span>›</span></a>
+      <a class="site-btn" href="https://kham.com.tw/" target="_blank" rel="noopener"><span class="ico">🎟️</span><span class="t">寬宏 KHAM<small>展演/親子/舞台劇</small></span><span>›</span></a>
+      <a class="site-btn" href="https://tickets.udnfunlife.com/" target="_blank" rel="noopener"><span class="ico">🗞️</span><span class="t">udn 售票網<small>展覽與表演</small></span><span>›</span></a>
+      <a class="site-btn" href="https://www.accupass.com/" target="_blank" rel="noopener"><span class="ico">🎉</span><span class="t">Accupass 活動通<small>講座/市集/活動</small></span><span>›</span></a>
+      <a class="site-btn" href="https://kktix.com/events" target="_blank" rel="noopener"><span class="ico">🎫</span><span class="t">KKTIX<small>各式展演</small></span><span>›</span></a>
+    </div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div class="card">
+    <h2>🔔 我的搶票清單(開賣倒數)</h2>
+    <label>活動名稱</label>
+    <input id="waName" type="text" placeholder="例如 五月天 2026 巡迴" />
+    <label>開賣時間</label>
+    <input id="waOnsale" type="datetime-local" />
+    <label>售票連結(可留空)</label>
+    <input id="waUrl" type="url" inputmode="url" placeholder="貼上官方售票頁網址(可不填)" />
+    <button class="btn" id="addBtn">加入追蹤</button>
+    <div class="note">時間到會幫你倒數,並可「加入行事曆」提醒。開賣時點「前往購票」自己下單(本服務不會自動搶票)。</div>
+    <div id="wlList" style="margin-top:14px;"></div>
+  </div>
+
+  <footer>
+    <div class="disclaimer">
+      <strong>合法聲明</strong><br>
+      本服務僅提供活動查詢與「開賣時間」提醒,所有購票皆需由您於各官方售票平台<strong>手動完成</strong>。
+      本服務<strong>不提供、也不進行</strong>任何自動搶票、自動下單、代客購票或繞過驗證之行為。
+      請遵守各售票平台規範與《文化創意產業發展法》相關規定,以正常方式購票。
+      <hr class="dis-hr" />
+      <strong>Legal notice</strong><br>
+      This service only helps you <strong>discover events and get on‑sale reminders</strong>. All ticket
+      purchases must be made <strong>manually by you</strong> on the official ticketing platforms. It does
+      <strong>not</strong> perform any automated buying, bots, bulk ordering, proxy purchasing, or CAPTCHA
+      bypass. Please buy tickets normally and follow each platform's terms and Taiwan's applicable laws.
+    </div>
+    Add to Home Screen 可當 App 使用
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var enc = function (s) { return encodeURIComponent(s || ""); };
+  var val = function (id) { var e = el(id); return e ? (e.value || "").trim() : ""; };
+
+  // ---- Tabs ----
+  var TABS = [
+    { t: "tabCon", p: "panelCon" }, { t: "tabBase", p: "panelBase" },
+    { t: "tabBask", p: "panelBask" }, { t: "tabShow", p: "panelShow" }
+  ];
+  TABS.forEach(function (x) {
+    el(x.t).addEventListener("click", function () {
+      TABS.forEach(function (y) {
+        el(y.t).classList.toggle("active", y.t === x.t);
+        el(y.p).classList.toggle("active", y.t === x.t);
+      });
+    });
+  });
+
+  // ---- Search ----
+  el("searchBtn").addEventListener("click", function () {
+    var kw = val("kw");
+    if (!kw) { el("kw").focus(); return; }
+    window.open("https://www.google.com/search?q=" + enc(kw + " 售票 2026 台灣"), "_blank");
+  });
+
+  // ---- Watchlist (localStorage) ----
+  var KEY = "goticket_watch";
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function gcalLink(item) {
+    var d = new Date(item.onsale); var e = new Date(d.getTime() + 3600000);
+    function f(x) { return x.getUTCFullYear() + pad(x.getUTCMonth() + 1) + pad(x.getUTCDate()) + "T" + pad(x.getUTCHours()) + pad(x.getUTCMinutes()) + "00Z"; }
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + enc("搶票:" + item.name) +
+           "&dates=" + f(d) + "/" + f(e) + "&details=" + enc("票券開賣提醒 — GoTicket");
+  }
+  function buyLink(item) {
+    return item.url ? item.url : "https://www.google.com/search?q=" + enc(item.name + " 售票");
+  }
+  function fmtWhen(iso) {
+    var d = new Date(iso);
+    return d.getFullYear() + "/" + pad(d.getMonth() + 1) + "/" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function addWatch() {
+    var name = val("waName"), onsale = val("waOnsale");
+    if (!name || !onsale) { alert("請填活動名稱與開賣時間"); return; }
+    var a = load();
+    a.push({ id: String(Date.now()) + Math.floor(Math.random() * 1000), name: name, onsale: onsale, url: val("waUrl") });
+    save(a);
+    el("waName").value = ""; el("waOnsale").value = ""; el("waUrl").value = "";
+    render();
+  }
+  function removeWatch(id) {
+    save(load().filter(function (x) { return x.id !== id; }));
+    render();
+  }
+
+  function render() {
+    var a = load().sort(function (x, y) { return new Date(x.onsale) - new Date(y.onsale); });
+    var list = el("wlList");
+    if (!a.length) { list.innerHTML = '<div class="empty">尚未追蹤任何活動。</div>'; updateBadge(); return; }
+    list.innerHTML = "";
+    a.forEach(function (item) {
+      var div = document.createElement("div"); div.className = "wl-item";
+      div.innerHTML =
+        '<div class="wl-name"></div>' +
+        '<div class="wl-when">開賣:' + fmtWhen(item.onsale) + '</div>' +
+        '<div class="wl-count" data-onsale="' + item.onsale + '">—</div>' +
+        '<div class="wl-actions">' +
+          '<a class="buy" href="' + buyLink(item) + '" target="_blank" rel="noopener">前往購票</a>' +
+          '<a href="' + gcalLink(item) + '" target="_blank" rel="noopener">加入行事曆</a>' +
+          '<button data-del="' + item.id + '">移除</button>' +
+        '</div>';
+      div.querySelector(".wl-name").textContent = item.name;   // safe text
+      div.querySelector("[data-del]").addEventListener("click", function () { removeWatch(item.id); });
+      list.appendChild(div);
+    });
+    tick(); updateBadge();
+  }
+
+  function tick() {
+    var now = Date.now();
+    Array.prototype.forEach.call(document.querySelectorAll(".wl-count"), function (c) {
+      var t = new Date(c.getAttribute("data-onsale")).getTime();
+      var diff = t - now;
+      if (diff <= 0) { c.textContent = "🟢 已開賣 / 開賣中"; c.classList.add("live"); return; }
+      var s = Math.floor(diff / 1000);
+      var d = Math.floor(s / 86400); s -= d * 86400;
+      var h = Math.floor(s / 3600); s -= h * 3600;
+      var m = Math.floor(s / 60); s -= m * 60;
+      c.classList.remove("live");
+      c.textContent = "⏳ " + (d > 0 ? d + " 天 " : "") + pad(h) + ":" + pad(m) + ":" + pad(s);
+    });
+  }
+
+  function updateBadge() {
+    var now = Date.now();
+    var upcoming = load().filter(function (x) { return new Date(x.onsale).getTime() > now; }).length;
+    el("badgeNum").textContent = upcoming;
+    el("badgeTxt").textContent = upcoming > 0 ? (upcoming + " 場即將開賣 — 別錯過!") : "目前沒有即將開賣的追蹤活動";
+  }
+
+  el("addBtn").addEventListener("click", addWatch);
+  el("badgeBar").addEventListener("click", function () { el("wlList").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  render();
+  setInterval(tick, 1000);
+  setInterval(updateBadge, 30000);
+})();
+</script>
+</body>
+</html>
