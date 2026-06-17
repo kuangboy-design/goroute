@@ -77,6 +77,11 @@
     .logo-en { margin-top: 16px; font-family: var(--western); font-size: 14px; letter-spacing: 2px;
       color: var(--ink-soft); text-shadow: 0 1px 0 rgba(255,245,210,.4); }
     .logo-en .kai { font-family: var(--kai); font-weight: 700; }
+    .switch-link { display: inline-block; margin-top: 14px; padding: 8px 16px; border-radius: 999px;
+      background: linear-gradient(#e9dab4, #d6bd8c); color: #5e3c20; font-family: var(--western);
+      font-size: 13px; letter-spacing: 1px; text-decoration: none; border: 1.5px solid #9c7b4a;
+      box-shadow: 0 2px 4px rgba(60,40,20,.25); }
+    .switch-link:active { background: #cdb482; }
 
     /* cobweb in the corner near the flies */
     .cobweb { position: absolute; top: 0; left: 0; z-index: 4; pointer-events: none; opacity: .8;
@@ -277,6 +282,7 @@
       <circle cx="18.2" cy="9.4" r="0.8" fill="#b33"/>
     </svg>
     <div class="logo-en">Eat · Sleep · Fly</div>
+    <div><a class="switch-link" href="index.html">🧭 GoRoute 導航 →</a></div>
   </header>
 
   <div class="tabs">
@@ -291,6 +297,7 @@
       <h2>🍽️ Find a restaurant</h2>
       <label>城市 City</label>
       <select id="eatCity"><option value="">— select city —</option></select>
+      <div id="eatCityHint" class="note hide"></div>
 
       <label>料理 Type of food</label>
       <select id="eatFood">
@@ -585,6 +592,40 @@
       sel.appendChild(g);
     });
   }
+
+  // ---- Shared city from GoRoute (same-origin localStorage) -----------
+  var TW_EN = {
+    "臺北市":"Taipei","新北市":"New Taipei","桃園市":"Taoyuan","臺中市":"Taichung",
+    "臺南市":"Tainan","高雄市":"Kaohsiung","基隆市":"Keelung","新竹市":"Hsinchu",
+    "新竹縣":"Hsinchu","嘉義市":"Chiayi","嘉義縣":"Chiayi","花蓮縣":"Hualien",
+    "臺東縣":"Taitung","金門縣":"Kinmen","澎湖縣":"Penghu"
+  };
+  function setSelectByCity(sel, city) {            // GoEat city (Chinese), with 台/臺 tolerance
+    var cands = [city, city.replace(/台/g, "臺"), city.replace(/臺/g, "台")];
+    for (var i = 0; i < sel.options.length; i++) {
+      if (cands.indexOf(sel.options[i].value) >= 0) { sel.value = sel.options[i].value; return sel.options[i].value; }
+    }
+    return "";
+  }
+  function setSelectValue(sel, val) {
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === val) { sel.value = val; return true; }
+    }
+    return false;
+  }
+  function applySharedCity() {
+    var city = null;
+    try { city = localStorage.getItem("go_shared_city"); } catch (e) {}
+    if (!city) return;
+    var applied = setSelectByCity(el("eatCity"), city);               // pre-select GoEat city
+    var en = TW_EN[city] || TW_EN[city.replace(/台/g, "臺")] || TW_EN[city.replace(/臺/g, "台")];
+    if (en) setSelectValue(el("flyFrom"), en);                        // pre-set GoFly "From"
+    if (applied) {
+      var h = el("eatCityHint");
+      h.textContent = "📍 已帶入你在 GoRoute 偵測到的城市：" + applied;
+      h.classList.remove("hide");
+    }
+  }
   function fillNums(id, start, end, def) {
     var s = el(id);
     for (var i = start; i <= end; i++) {
@@ -624,6 +665,7 @@
   fillCountries("flyCountry", "flyCity");
   fillCountries("sleepCountry", "sleepCity");
   fillFromCities();
+  applySharedCity();
 
   // + / − steppers for guests / adults / children
   Array.prototype.forEach.call(document.querySelectorAll(".step-btn"), function (btn) {

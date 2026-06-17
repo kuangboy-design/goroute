@@ -35,6 +35,10 @@
     h1 { font-size: 26px; margin: 0; letter-spacing: -0.5px; }
     h1 span { color: var(--blue); }
     .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .switch-link { display: inline-block; margin-top: 12px; padding: 9px 16px; border-radius: 999px;
+      background: #e8f0fe; color: var(--blue); font-size: 14px; font-weight: 600; text-decoration: none;
+      border: 1px solid #d6e4fc; }
+    .switch-link:active { background: #d6e4fc; }
 
     .card {
       background: var(--card);
@@ -154,6 +158,7 @@
   <header>
     <h1>Go<span>Route</span></h1>
     <div class="sub">Your location, the weather, and one tap to navigate.</div>
+    <a class="switch-link" href="services.html">🍽️ 吃喝玩樂 · Kuang之客棧 →</a>
   </header>
 
   <!-- CURRENT LOCATION + WEATHER -->
@@ -311,14 +316,18 @@
     return fetch(url).then(function (r) { return r.json(); });
   }
 
-  // ---- Reverse geocode current location -> FULL address --------------
+  // ---- Reverse geocode current location -> { display, city } ---------
   function fullAddress(lat, lon) {
     var url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=18" +
               "&addressdetails=1&accept-language=zh-TW&lat=" + lat + "&lon=" + lon;
     return fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.json(); })
-      .then(function (d) { return (d && d.display_name) ? d.display_name : ""; })
-      .catch(function () { return ""; });
+      .then(function (d) {
+        var a = (d && d.address) ? d.address : {};
+        var city = a.city || a.county || a.state || a.town || a.village || "";
+        return { display: (d && d.display_name) ? d.display_name : "", city: city };
+      })
+      .catch(function () { return { display: "", city: "" }; });
   }
 
   // ---- Forward geocode a single query (restricted to Taiwan) ---------
@@ -406,8 +415,10 @@
           el("hereIco").textContent = w[1];
         }
       });
-      fullAddress(here.lat, here.lon).then(function (addr) {
-        el("herePlace").textContent = addr || (here.lat + ", " + here.lon);
+      fullAddress(here.lat, here.lon).then(function (res) {
+        el("herePlace").textContent = res.display || (here.lat + ", " + here.lon);
+        // Share the detected city with the Kuang之客棧 page (same-origin localStorage).
+        if (res.city) { try { localStorage.setItem("go_shared_city", res.city); } catch (e) {} }
       });
     }, function (err) {
       var msg = "Couldn't get your location.";
