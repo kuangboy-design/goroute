@@ -122,18 +122,17 @@
 
   <!-- AI KEY -->
   <div class="card">
-    <h2>🔑 AI 設定(Gemini 金鑰)</h2>
-    <input type="password" id="gkey" placeholder="貼上你的 Gemini API 金鑰" autocomplete="off" />
+    <h2>🔑 AI 設定(Groq 金鑰 · 免費免信用卡)</h2>
+    <input type="password" id="gkey" placeholder="貼上你的 Groq API 金鑰(gsk_...)" autocomplete="off" />
     <button class="btn btn-sm" id="saveKey">儲存金鑰(只存在本機)</button>
     <div id="keyOk" class="key-ok hide">✅ 已儲存金鑰於此瀏覽器</div>
-    <label style="margin-top:12px;">AI 模型(若某個額度用罄,換一個試)</label>
+    <label style="margin-top:12px;">AI 模型(若某個無法用,換一個試)</label>
     <select id="model">
-      <option value="gemini-2.0-flash">gemini-2.0-flash(預設)</option>
-      <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-      <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
-      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+      <option value="llama-3.3-70b-versatile">Llama 3.3 70B(預設 · 品質佳)</option>
+      <option value="llama-3.1-8b-instant">Llama 3.1 8B(最快)</option>
+      <option value="gemma2-9b-it">Gemma2 9B</option>
     </select>
-    <div class="note">免費取得金鑰:前往 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> → Create API key,複製後貼到上方。金鑰只會存在你的手機/瀏覽器,不會上傳。</div>
+    <div class="note">免費取得金鑰(免信用卡):前往 <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq Console</a> → 註冊/登入 → Create API Key,複製後貼到上方。金鑰只存在你的瀏覽器,不會上傳。</div>
   </div>
 
   <button class="btn" id="genBtn">✨ 產生我的行程</button>
@@ -146,7 +145,7 @@
 
   <footer>
     <div class="disclaimer">行程由 AI 生成,僅供參考 — 實際營業時間、票價、交通與安全請務必再確認。</div>
-    SongYou 爽旅 · 定位與天氣 zero-setup;行程由你的 Gemini 金鑰產生
+    SongYou 爽旅 · 定位與天氣 zero-setup;行程由你的 Groq(AI)金鑰產生
   </footer>
 
 <script>
@@ -199,12 +198,12 @@
   }
 
   // ---- Gemini key ----
-  function loadKey() { try { return localStorage.getItem("songyou_gkey") || ""; } catch (e) { return ""; } }
+  function loadKey() { try { return localStorage.getItem("songyou_groqkey") || ""; } catch (e) { return ""; } }
   function showKeyState() { if (loadKey()) { el("keyOk").classList.remove("hide"); el("gkey").placeholder = "金鑰已儲存(可重新輸入覆蓋)"; } }
   el("saveKey").addEventListener("click", function () {
     var k = el("gkey").value.trim();
     if (!k) { alert("請先貼上金鑰"); return; }
-    try { localStorage.setItem("songyou_gkey", k); } catch (e) {}
+    try { localStorage.setItem("songyou_groqkey", k); } catch (e) {}
     el("gkey").value = ""; showKeyState();
   });
 
@@ -247,15 +246,16 @@
       "- 一行 Google 地圖連結,格式:https://www.google.com/maps/search/?api=1&query=地點名稱\n\n" +
       "最後給一句貼心提醒。務必符合 " + hours + " 小時內可完成,並安排用餐時段。";
 
-    var model = el("model").value || "gemini-2.0-flash";
+    var model = el("model").value || "llama-3.3-70b-versatile";
     var btn = el("genBtn"); btn.disabled = true; var old = btn.textContent; btn.textContent = "AI 規劃中…請稍候";
-    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key);
-    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.9 } }) })
+    var url = "https://api.groq.com/openai/v1/chat/completions";
+    fetch(url, { method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+      body: JSON.stringify({ model: model, temperature: 0.9, messages: [{ role: "user", content: prompt }] }) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d.error) throw new Error(d.error.message || "API 錯誤");
-        var t = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts[0].text;
+        if (d.error) throw new Error((d.error && d.error.message) || "API 錯誤");
+        var t = d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
         if (!t) throw new Error("沒有取得回應內容");
         el("planOut").innerHTML = mdToHtml(t);
         el("planCard").classList.remove("hide");
@@ -263,13 +263,11 @@
       })
       .catch(function (e) {
         var msg = (e.message || e) + "";
-        var tip = "請確認金鑰正確、且該金鑰已啟用 Gemini API。";
-        if (/quota|exhaust|429|rate|billing/i.test(msg)) {
-          tip = "這是『額度/速率』限制,可試:<br>" +
-            "① 等 1 分鐘再按一次。<br>" +
-            "② 在上方「AI 模型」<strong>換另一個模型</strong>再試。<br>" +
-            "③ 改用<strong>個人 Gmail</strong>(非公司帳號)重新建立金鑰 — 公司帳號常無免費額度。<br>" +
-            "④ 或到 Google AI Studio 確認該專案的免費額度 / 帳單設定。";
+        var tip = "請確認金鑰正確(gsk_ 開頭)、模型名稱有效。";
+        if (/quota|exhaust|429|rate|limit/i.test(msg)) {
+          tip = "額度/速率限制:等 1 分鐘再試,或在上方換一個模型。Groq 免費額度有每分鐘/每日上限。";
+        } else if (/failed to fetch|networkerror|load failed|cors/i.test(msg)) {
+          tip = "連線被瀏覽器阻擋(CORS)或網路問題。請確認網路;若一直發生,告訴我,我改接 OpenRouter(同樣可在瀏覽器直接呼叫)。";
         }
         el("planOut").innerHTML = '<span style="color:#c92a2a">產生失敗:' + msg + '</span><br><br>' + tip;
         el("planCard").classList.remove("hide");
