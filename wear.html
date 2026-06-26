@@ -55,6 +55,8 @@
 
   <div class="card hide" id="tipCard">
     <div class="tips" id="tips"></div>
+    <div id="avatar" style="text-align:center; margin-top:10px;"></div>
+    <div id="avatarCap" class="sub" style="text-align:center; margin-top:4px;"></div>
   </div>
 
   <footer>今天穿什麼 · 天氣 open-meteo(免費)</footer>
@@ -87,6 +89,42 @@
     return L;
   }
 
+  // Mii-style avatar that dresses for the weather
+  function buildAvatar(t, rain) {
+    var skin = "#ffd9b3", pants = "#34495e", shoe = "#212529", shirt, longSleeve, longLegs, label;
+    if (t >= 28) { shirt = "#ffd43b"; longSleeve = false; longLegs = false; label = "炎熱・清涼裝"; }
+    else if (t >= 23) { shirt = "#4dabf7"; longSleeve = false; longLegs = false; label = "溫暖・短袖"; }
+    else if (t >= 18) { shirt = "#5c7cfa"; longSleeve = true; longLegs = true; label = "微涼・長袖"; }
+    else if (t >= 14) { shirt = "#4263eb"; longSleeve = true; longLegs = true; label = "偏涼・薄外套"; }
+    else if (t >= 10) { shirt = "#495057"; longSleeve = true; longLegs = true; label = "冷・厚外套"; }
+    else { shirt = "#343a40"; longSleeve = true; longLegs = true; label = "很冷・大衣圍巾"; }
+    var coat = t < 10, beanie = t < 14, scarf = t < 10, shades = t >= 28;
+    var armColor = longSleeve ? shirt : skin, legColor = longLegs ? pants : skin, legH = longLegs ? 54 : 36;
+    var bx = coat ? 48 : 54, bw = coat ? 64 : 52, bh = coat ? 84 : 62;
+    var s = '<svg viewBox="0 0 160 250" width="150" height="234" aria-hidden="true">';
+    if (rain) {
+      s += '<path d="M92 44 a32 22 0 0 1 64 0 z" fill="#e8590c"/><path d="M92 44 h64" stroke="#b5410a" stroke-width="2"/>';
+      s += '<rect x="122" y="44" width="3.5" height="104" fill="#6b4423"/>';
+    }
+    s += '<rect x="62" y="150" width="16" height="' + legH + '" rx="6" fill="' + legColor + '"/>';
+    s += '<rect x="82" y="150" width="16" height="' + legH + '" rx="6" fill="' + legColor + '"/>';
+    if (!longLegs) s += '<rect x="58" y="146" width="44" height="20" rx="7" fill="#495057"/>';
+    s += '<rect x="58" y="' + (150 + legH - 4) + '" width="22" height="11" rx="5" fill="' + shoe + '"/>';
+    s += '<rect x="80" y="' + (150 + legH - 4) + '" width="22" height="11" rx="5" fill="' + shoe + '"/>';
+    s += '<rect x="' + (bx - 14) + '" y="92" width="14" height="48" rx="7" fill="' + armColor + '"/><circle cx="' + (bx - 7) + '" cy="144" r="8" fill="' + skin + '"/>';
+    s += '<rect x="' + (bx + bw) + '" y="92" width="14" height="48" rx="7" fill="' + armColor + '"/><circle cx="' + (bx + bw + 7) + '" cy="144" r="8" fill="' + skin + '"/>';
+    s += '<rect x="' + bx + '" y="88" width="' + bw + '" height="' + bh + '" rx="16" fill="' + shirt + '"/>';
+    if (scarf) s += '<rect x="62" y="84" width="36" height="13" rx="6" fill="#e03131"/><rect x="90" y="90" width="11" height="26" rx="5" fill="#e03131"/>';
+    s += '<rect x="73" y="78" width="14" height="14" fill="#f3c79b"/>';
+    s += '<circle cx="80" cy="50" r="30" fill="' + skin + '"/>';
+    s += '<path d="M50 50 a30 30 0 0 1 60 0 q-30 -20 -60 0 z" fill="#5c3a1e"/>';
+    if (beanie) s += '<path d="M49 42 a31 26 0 0 1 62 0 z" fill="#e8590c"/><rect x="47" y="40" width="66" height="8" rx="4" fill="#c44d09"/>';
+    if (shades) s += '<rect x="60" y="45" width="40" height="11" rx="4" fill="#222"/>';
+    else s += '<circle cx="70" cy="50" r="3.5" fill="#222"/><circle cx="90" cy="50" r="3.5" fill="#222"/>';
+    s += '<path d="M70 62 q10 9 20 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+    return { svg: s, label: label };
+  }
+
   function init() {
     if (!navigator.geolocation) { el("locStatus").textContent = "此瀏覽器無法定位。"; return; }
     navigator.geolocation.getCurrentPosition(function (pos) {
@@ -102,6 +140,10 @@
           el("meta").textContent = w[0] + " · 體感 " + Math.round(c.apparent_temperature) + "° · 風 " + Math.round(c.wind_speed_10m) + " km/h";
           var tips = advise(c.temperature_2m, c.apparent_temperature, c.weather_code, c.wind_speed_10m, c.precipitation);
           el("tips").innerHTML = tips.map(function (x) { return '<div><span class="k">' + x[0] + '</span>:' + x[1] + '</div>'; }).join("");
+          var rain = RAIN.indexOf(c.weather_code) >= 0 || c.precipitation > 0;
+          var av = buildAvatar(c.temperature_2m, rain);
+          el("avatar").innerHTML = av.svg;
+          el("avatarCap").textContent = "👤 今日穿搭示意:" + av.label + (rain ? "・記得帶傘 ☔" : "");
           el("tipCard").classList.remove("hide");
         })
         .catch(function (e) { el("locStatus").className = "status err"; el("locStatus").textContent = "天氣載入失敗:" + (e.message || e); });

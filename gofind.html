@@ -23,6 +23,9 @@
     .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
     .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:0 0 12px; }
     .status { font-size:13px; color:var(--muted); } .status.err { color:#c92a2a; }
+    .wrow { display:flex; align-items:center; gap:14px; margin-top:8px; }
+    .wico { font-size:40px; } .wtemp { font-size:32px; font-weight:800; line-height:1; }
+    .wmeta { font-size:13px; color:var(--muted); margin-top:2px; }
     label { display:block; font-size:12px; font-weight:700; color:var(--muted); margin:6px 0 6px; }
     .cats { display:flex; gap:8px; flex-wrap:wrap; }
     .cat { flex:1; min-width:84px; } .cat input { position:absolute; opacity:0; pointer-events:none; }
@@ -55,6 +58,14 @@
   <div class="card">
     <h2>📍 你的位置</h2>
     <div id="locStatus" class="status">正在定位…</div>
+    <div id="here" class="wrow hide">
+      <div class="wico" id="wico">⛅️</div>
+      <div>
+        <div class="wtemp"><span id="wtemp">--</span>°</div>
+        <div class="wmeta" id="wdesc">—</div>
+        <div class="wmeta" id="wplace">—</div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -131,6 +142,19 @@
     navigator.geolocation.getCurrentPosition(function (pos) {
       here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       el("locStatus").textContent = "✅ 已定位,選類別後按搜尋";
+      var wm = { 0:["晴","☀️"],1:["大致晴","🌤️"],2:["局部多雲","⛅️"],3:["陰","☁️"],45:["霧","🌫️"],48:["霧","🌫️"],
+        51:["毛毛雨","🌦️"],53:["細雨","🌦️"],55:["雨","🌧️"],61:["小雨","🌦️"],63:["雨","🌧️"],65:["大雨","🌧️"],
+        71:["小雪","🌨️"],73:["雪","🌨️"],75:["大雪","❄️"],80:["陣雨","🌦️"],81:["陣雨","🌧️"],82:["強陣雨","⛈️"],95:["雷雨","⛈️"],96:["雷雨","⛈️"],99:["雷雨","⛈️"] };
+      fetch("https://api.open-meteo.com/v1/forecast?latitude=" + here.lat + "&longitude=" + here.lng + "&current=temperature_2m,weather_code")
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.current) { var w = wm[d.current.weather_code] || ["—","🌡️"];
+            el("wtemp").textContent = Math.round(d.current.temperature_2m); el("wdesc").textContent = w[0]; el("wico").textContent = w[1];
+            el("here").classList.remove("hide"); }
+        }).catch(function () {});
+      fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&accept-language=zh-TW&lat=" + here.lat + "&lon=" + here.lng, { headers: { "Accept": "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.display_name) { el("wplace").textContent = "📍 " + d.display_name; el("here").classList.remove("hide"); } }).catch(function () {});
     }, function (err) {
       el("locStatus").className = "status err";
       el("locStatus").textContent = (err.code === 1) ? "定位被拒,請允許定位後重新整理。" : "無法取得位置。";
