@@ -21,6 +21,8 @@
 | `wear.html` | **今天穿什麼** | 依天氣建議穿搭、帶傘提醒 | 無 |
 | `air.html` | **AirGo 不臭** | 空氣品質 AQI・PM2.5・UV | 無 |
 | `spin.html` | **吃什麼轉盤** | 隨機幫你決定吃什麼 | 無 |
+| `gotime.html` | **GoTime 時差** | 台北 vs 各國即時時間/時差 | 無 |
+| `goconvert.html` | **GoConvert** | 長度/重量/溫度/鞋碼尺寸換算 | 無 |
 
 輔助檔:`manifest.json`(PWA 設定,指向 hub)、`tw-districts.js`(GoRoute 縣市/區資料)。
 
@@ -41,6 +43,8 @@ goexchange.html
 wear.html
 air.html
 spin.html
+gotime.html
+goconvert.html
 manifest.json
 tw-districts.js
 appicon-180.png

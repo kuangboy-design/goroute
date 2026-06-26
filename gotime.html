@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#3b5bdb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GoTime 時差" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <title>GoTime · 世界時差</title>
+  <style>
+    :root { --accent:#3b5bdb; --accent-d:#2f49b8; --bg:#eef1fb; --card:#fff; --text:#15192b; --muted:#5a627a; --line:#dde2f2; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:var(--accent); }
+    .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .nav-row { display:flex; gap:8px; margin-top:12px; }
+    .nav-row a { flex:1; text-align:center; font-size:13px; padding:8px 6px; border-radius:999px; text-decoration:none;
+      background:#e4e8fb; color:var(--accent-d); border:1px solid var(--line); font-weight:600; }
+    .card { background:var(--card); border-radius:16px; padding:18px 16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); text-align:center; }
+    .city { font-size:14px; font-weight:700; color:var(--muted); }
+    .clock { font-size:46px; font-weight:800; letter-spacing:1px; line-height:1.1; font-variant-numeric:tabular-nums; }
+    .date { font-size:13px; color:var(--muted); margin-top:4px; }
+    .dest .clock { color:var(--accent); }
+    label { display:block; font-size:12px; font-weight:700; color:var(--muted); margin:0 0 6px; }
+    select { width:100%; font-size:16px; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text); -webkit-appearance:none; appearance:none; }
+    .diff { text-align:center; font-size:15px; font-weight:700; color:var(--accent-d); margin:2px 0 14px; }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Go<span>Time</span> · 時差 🕑</h1>
+    <div class="sub">台北 vs 目的地,即時時間與時差</div>
+    <div class="nav-row"><a href="hub.html">🎒 全部服務 · Day-A-GoGo</a></div>
+  </header>
+
+  <div class="card">
+    <label>選擇目的地城市</label>
+    <select id="city"></select>
+  </div>
+
+  <div class="card dest">
+    <div class="city" id="destName">—</div>
+    <div class="clock" id="destClock">--:--:--</div>
+    <div class="date" id="destDate">—</div>
+  </div>
+  <div class="diff" id="diff">—</div>
+  <div class="card">
+    <div class="city">🏠 台北(你的家)</div>
+    <div class="clock" id="homeClock">--:--:--</div>
+    <div class="date" id="homeDate">—</div>
+  </div>
+
+  <footer>GoTime · 使用裝置時區資料,無需網路</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var HOME = { n: "台北", tz: "Asia/Taipei" };
+  var CITIES = [
+    { n: "東京 Tokyo", tz: "Asia/Tokyo" }, { n: "首爾 Seoul", tz: "Asia/Seoul" }, { n: "香港 Hong Kong", tz: "Asia/Hong_Kong" },
+    { n: "曼谷 Bangkok", tz: "Asia/Bangkok" }, { n: "新加坡 Singapore", tz: "Asia/Singapore" }, { n: "上海/北京", tz: "Asia/Shanghai" },
+    { n: "峇里島 Bali", tz: "Asia/Makassar" }, { n: "杜拜 Dubai", tz: "Asia/Dubai" }, { n: "倫敦 London", tz: "Europe/London" },
+    { n: "巴黎 Paris", tz: "Europe/Paris" }, { n: "紐約 New York", tz: "America/New_York" }, { n: "洛杉磯 LA", tz: "America/Los_Angeles" },
+    { n: "溫哥華 Vancouver", tz: "America/Vancouver" }, { n: "雪梨 Sydney", tz: "Australia/Sydney" }, { n: "檀香山 Honolulu", tz: "Pacific/Honolulu" }
+  ];
+  var sel = el("city");
+  CITIES.forEach(function (c, i) { var o = document.createElement("option"); o.value = i; o.textContent = c.n; sel.appendChild(o); });
+
+  function timeStr(tz) { return new Intl.DateTimeFormat("zh-TW", { timeZone: tz, hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date()); }
+  function dateStr(tz) { return new Intl.DateTimeFormat("zh-TW", { timeZone: tz, month: "long", day: "numeric", weekday: "short" }).format(new Date()); }
+  function offMin(tz) { var now = new Date(); var s = now.toLocaleString("en-US", { timeZone: tz }); return Math.round((new Date(s) - now) / 60000); }
+
+  function tick() {
+    var c = CITIES[parseInt(sel.value, 10) || 0];
+    el("destName").textContent = "✈️ " + c.n;
+    el("destClock").textContent = timeStr(c.tz);
+    el("destDate").textContent = dateStr(c.tz);
+    el("homeClock").textContent = timeStr(HOME.tz);
+    el("homeDate").textContent = dateStr(HOME.tz);
+    var diffH = (offMin(c.tz) - offMin(HOME.tz)) / 60;
+    var txt;
+    if (diffH === 0) txt = "和台北同時間";
+    else txt = "比台北 " + (diffH > 0 ? "快" : "慢") + " " + Math.abs(diffH) + " 小時";
+    el("diff").textContent = "⏱ " + c.n.split(" ")[0] + " " + txt;
+  }
+  sel.addEventListener("change", tick);
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

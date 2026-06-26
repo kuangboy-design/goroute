@@ -65,6 +65,10 @@
       <div class="cat"><input type="radio" name="cat" id="c_atm" value="atm" /><label for="c_atm"><span class="e">🏧</span>ATM</label></div>
       <div class="cat"><input type="radio" name="cat" id="c_pharm" value="pharmacy" /><label for="c_pharm"><span class="e">💊</span>藥局</label></div>
       <div class="cat"><input type="radio" name="cat" id="c_fuel" value="fuel" /><label for="c_fuel"><span class="e">⛽</span>加油站</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_park" value="parking" /><label for="c_park"><span class="e">🅿️</span>停車場</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_bike" value="bike" /><label for="c_bike"><span class="e">🚲</span>YouBike</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_charge" value="charge" /><label for="c_charge"><span class="e">🔌</span>充電站</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_water" value="water" /><label for="c_water"><span class="e">🚰</span>飲水機</label></div>
     </div>
     <label style="margin-top:12px;">搜尋範圍</label>
     <div class="opts">
@@ -94,7 +98,11 @@
     convenience: { label:"超商", e:"🏪", sel:'["shop"="convenience"]', fb:"便利商店" },
     atm:         { label:"ATM",  e:"🏧", sel:'["amenity"="atm"]', fb:"ATM" },
     pharmacy:    { label:"藥局", e:"💊", sel:'["amenity"="pharmacy"]', fb:"藥局" },
-    fuel:        { label:"加油站", e:"⛽", sel:'["amenity"="fuel"]', fb:"加油站" }
+    fuel:        { label:"加油站", e:"⛽", sel:'["amenity"="fuel"]', fb:"加油站" },
+    parking:     { label:"停車場", e:"🅿️", sel:'["amenity"="parking"]', fb:"停車場" },
+    bike:        { label:"YouBike", e:"🚲", sel:'["amenity"="bicycle_rental"]', fb:"租借站" },
+    charge:      { label:"充電站", e:"🔌", sel:'["amenity"="charging_station"]', fb:"充電站" },
+    water:       { label:"飲水機", e:"🚰", sel:'["amenity"="drinking_water"]', fb:"飲水機" }
   };
   var OVERPASS = [
     "https://overpass-api.de/api/interpreter",
