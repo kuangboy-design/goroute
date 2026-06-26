@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4dabf7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <meta name="apple-mobile-web-app-title" content="今天穿什麼" />
+  <title>今天穿什麼</title>
+  <style>
+    :root { --accent:#4dabf7; --accent-d:#1c7ed6; --bg:#eef6fd; --card:#fff; --text:#16202c; --muted:#5b6675; --line:#dbe7f3; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:var(--accent-d); }
+    .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .nav-row { display:flex; gap:8px; margin-top:12px; }
+    .nav-row a { flex:1; text-align:center; font-size:13px; padding:8px 6px; border-radius:999px; text-decoration:none;
+      background:#e3eefb; color:var(--accent-d); border:1px solid var(--line); font-weight:600; }
+    .card { background:var(--card); border-radius:16px; padding:18px 16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .status { font-size:13px; color:var(--muted); }
+    .status.err { color:#c92a2a; }
+    .now { display:flex; align-items:center; gap:14px; }
+    .now .ico { font-size:46px; } .now .temp { font-size:40px; font-weight:800; line-height:1; }
+    .now .meta { font-size:13px; color:var(--muted); margin-top:3px; }
+    .tips { font-size:17px; line-height:1.9; margin-top:4px; }
+    .tips .k { font-weight:800; color:var(--accent-d); }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:16px; }
+    .hide { display:none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>今天<span>穿什麼</span> 👕</h1>
+    <div class="sub">依你目前天氣,建議穿搭與要不要帶傘</div>
+    <div class="nav-row">
+      <a href="hub.html">🎒 全部服務 · Day-A-GoGo</a>
+    </div>
+  </header>
+
+  <div class="card">
+    <div id="locStatus" class="status">正在定位、取得天氣…</div>
+    <div id="now" class="now hide">
+      <div class="ico" id="ico">⛅️</div>
+      <div>
+        <div class="temp"><span id="temp">--</span>°</div>
+        <div class="meta" id="meta">—</div>
+        <div class="meta" id="place">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hide" id="tipCard">
+    <div class="tips" id="tips"></div>
+  </div>
+
+  <footer>今天穿什麼 · 天氣 open-meteo(免費)</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  function wcode(c) {
+    var m = { 0:["晴","☀️"],1:["大致晴","🌤️"],2:["局部多雲","⛅️"],3:["陰","☁️"],45:["霧","🌫️"],48:["霧","🌫️"],
+      51:["毛毛雨","🌦️"],53:["細雨","🌦️"],55:["雨","🌧️"],61:["小雨","🌦️"],63:["雨","🌧️"],65:["大雨","🌧️"],
+      71:["小雪","🌨️"],73:["雪","🌨️"],75:["大雪","❄️"],80:["陣雨","🌦️"],81:["陣雨","🌧️"],82:["強陣雨","⛈️"],
+      95:["雷雨","⛈️"],96:["雷雨","⛈️"],99:["雷雨","⛈️"] };
+    return m[c] || ["—","🌡️"];
+  }
+  var RAIN = [51,53,55,61,63,65,66,67,80,81,82,95,96,99];
+
+  function advise(t, feels, code, wind, precip) {
+    var L = [];
+    if (t >= 28) L.push(["天氣", "炎熱,穿短袖短褲、透氣排汗,記得補水 🥤"]);
+    else if (t >= 23) L.push(["天氣", "溫暖舒適,短袖或薄上衣即可 👕"]);
+    else if (t >= 18) L.push(["天氣", "微涼,長袖或帶件薄外套 🧥"]);
+    else if (t >= 14) L.push(["天氣", "偏涼,建議外套 🧥"]);
+    else if (t >= 10) L.push(["天氣", "冷,穿厚外套、可加圍巾 🧣"]);
+    else L.push(["天氣", "很冷,大衣＋保暖配件,注意保暖 🧤🧣"]);
+
+    if (RAIN.indexOf(code) >= 0 || precip > 0) L.push(["雨具", "可能下雨,記得帶傘 ☔"]);
+    if (wind >= 30) L.push(["風", "風大,加件防風外套、留意帽子 💨"]);
+    if (Math.abs(feels - t) >= 3) L.push(["體感", "體感約 " + Math.round(feels) + "°,以體感溫度為準"]);
+    return L;
+  }
+
+  function init() {
+    if (!navigator.geolocation) { el("locStatus").textContent = "此瀏覽器無法定位。"; return; }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var lat = pos.coords.latitude, lng = pos.coords.longitude;
+      fetch("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lng +
+            "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation")
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.current) throw new Error("天氣資料異常");
+          var c = d.current, w = wcode(c.weather_code), t = Math.round(c.temperature_2m);
+          el("locStatus").classList.add("hide"); el("now").classList.remove("hide");
+          el("temp").textContent = t; el("ico").textContent = w[1];
+          el("meta").textContent = w[0] + " · 體感 " + Math.round(c.apparent_temperature) + "° · 風 " + Math.round(c.wind_speed_10m) + " km/h";
+          var tips = advise(c.temperature_2m, c.apparent_temperature, c.weather_code, c.wind_speed_10m, c.precipitation);
+          el("tips").innerHTML = tips.map(function (x) { return '<div><span class="k">' + x[0] + '</span>:' + x[1] + '</div>'; }).join("");
+          el("tipCard").classList.remove("hide");
+        })
+        .catch(function (e) { el("locStatus").className = "status err"; el("locStatus").textContent = "天氣載入失敗:" + (e.message || e); });
+      fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=12&accept-language=zh-TW&lat=" + lat + "&lon=" + lng, { headers: { "Accept": "application/json" } })
+        .then(function (r) { return r.json(); }).then(function (d) { if (d && d.display_name) el("place").textContent = d.display_name; }).catch(function () {});
+    }, function (err) {
+      el("locStatus").className = "status err";
+      el("locStatus").textContent = (err.code === 1) ? "定位被拒,請允許定位後重新整理。" : "無法取得位置。";
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  }
+  init();
+})();
+</script>
+</body>
+</html>

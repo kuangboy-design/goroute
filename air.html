@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2b8a3e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <meta name="apple-mobile-web-app-title" content="AirGo 不臭" />
+  <title>AirGo · 不臭</title>
+  <style>
+    :root { --bg:#eef6f0; --card:#fff; --text:#16241a; --muted:#5b6b60; --line:#d7e8db; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:#2b8a3e; }
+    .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .nav-row { display:flex; gap:8px; margin-top:12px; }
+    .nav-row a { flex:1; text-align:center; font-size:13px; padding:8px 6px; border-radius:999px; text-decoration:none;
+      background:#e3f2e7; color:#268239; border:1px solid var(--line); font-weight:600; }
+    .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .status { font-size:13px; color:var(--muted); } .status.err { color:#c92a2a; }
+    .metric { display:flex; align-items:center; gap:14px; padding:6px 0; }
+    .badge { min-width:64px; text-align:center; padding:10px 6px; border-radius:12px; color:#fff; font-weight:800; font-size:18px; }
+    .metric .lab { font-size:14px; font-weight:700; } .metric .desc { font-size:13px; color:var(--muted); margin-top:2px; }
+    .place { font-size:12px; color:var(--muted); margin-top:6px; }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:16px; }
+    .hide { display:none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Air<span>Go</span> · 不臭</h1>
+    <div class="sub">目前 PM2.5、空氣品質指數與紫外線 ☀️😷</div>
+    <div class="nav-row">
+      <a href="hub.html">🎒 全部服務 · Day-A-GoGo</a>
+    </div>
+  </header>
+
+  <div class="card">
+    <div id="status" class="status">正在定位、取得空氣資料…</div>
+    <div id="data" class="hide">
+      <div class="metric"><div class="badge" id="aqiBadge">--</div><div><div class="lab">空氣品質 (AQI)</div><div class="desc" id="aqiDesc">—</div></div></div>
+      <div class="metric"><div class="badge" id="pmBadge" style="background:#868e96">--</div><div><div class="lab">PM2.5</div><div class="desc" id="pmDesc">—</div></div></div>
+      <div class="metric"><div class="badge" id="uvBadge">--</div><div><div class="lab">紫外線 (UV)</div><div class="desc" id="uvDesc">—</div></div></div>
+      <div class="place" id="place"></div>
+    </div>
+  </div>
+
+  <footer>AirGo · 資料 open-meteo Air Quality(免費)· 僅供參考</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  function aqiInfo(v) {
+    if (v == null) return ["#868e96", "無資料", ""];
+    if (v <= 20) return ["#2b8a3e", "良好", "空氣清新,適合戶外活動 🙂"];
+    if (v <= 40) return ["#74b816", "尚可", "空氣可接受,敏感族群留意"];
+    if (v <= 60) return ["#f08c00", "普通", "敏感族群減少劇烈戶外運動"];
+    if (v <= 80) return ["#e8590c", "不良", "建議戴口罩,減少戶外 😷"];
+    if (v <= 100) return ["#c92a2a", "很不良", "盡量待室內、戴口罩 😷"];
+    return ["#862e9c", "危害", "避免外出,緊閉門窗 🚫"];
+  }
+  function pmDesc(v) { if (v == null) return ""; if (v <= 15) return "很低,空氣乾淨"; if (v <= 35) return "普通"; if (v <= 54) return "偏高,敏感族群注意"; return "高,建議口罩"; }
+  function uvInfo(v) {
+    if (v == null) return ["#868e96", "無資料", ""];
+    if (v < 3) return ["#2b8a3e", "低", "一般防護即可"];
+    if (v < 6) return ["#f08c00", "中等", "外出建議防曬 🧴"];
+    if (v < 8) return ["#e8590c", "高", "防曬+帽子+太陽眼鏡 🕶️"];
+    if (v < 11) return ["#c92a2a", "很高", "避免中午曝曬,加強防曬"];
+    return ["#862e9c", "極高", "盡量待陰涼處 🚫☀️"];
+  }
+
+  function init() {
+    if (!navigator.geolocation) { el("status").textContent = "此瀏覽器無法定位。"; return; }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var lat = pos.coords.latitude, lng = pos.coords.longitude;
+      fetch("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=" + lat + "&longitude=" + lng +
+            "&current=european_aqi,pm2_5,uv_index")
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.current) throw new Error("資料異常");
+          var c = d.current;
+          var a = aqiInfo(c.european_aqi);
+          el("aqiBadge").textContent = (c.european_aqi != null ? Math.round(c.european_aqi) : "--"); el("aqiBadge").style.background = a[0];
+          el("aqiDesc").textContent = a[1] + " — " + a[2];
+          el("pmBadge").textContent = (c.pm2_5 != null ? Math.round(c.pm2_5) : "--");
+          el("pmDesc").textContent = (c.pm2_5 != null ? c.pm2_5 + " µg/m³ · " : "") + pmDesc(c.pm2_5);
+          var u = uvInfo(c.uv_index);
+          el("uvBadge").textContent = (c.uv_index != null ? Math.round(c.uv_index) : "--"); el("uvBadge").style.background = u[0];
+          el("uvDesc").textContent = u[1] + " — " + u[2];
+          el("status").classList.add("hide"); el("data").classList.remove("hide");
+        })
+        .catch(function (e) { el("status").className = "status err"; el("status").textContent = "資料載入失敗:" + (e.message || e); });
+      fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=12&accept-language=zh-TW&lat=" + lat + "&lon=" + lng, { headers: { "Accept": "application/json" } })
+        .then(function (r) { return r.json(); }).then(function (d) { if (d && d.display_name) el("place").textContent = "📍 " + d.display_name; }).catch(function () {});
+    }, function (err) {
+      el("status").className = "status err";
+      el("status").textContent = (err.code === 1) ? "定位被拒,請允許定位後重新整理。" : "無法取得位置。";
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  }
+  init();
+})();
+</script>
+</body>
+</html>

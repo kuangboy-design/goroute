@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c8599" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <meta name="apple-mobile-web-app-title" content="GoFind 急啊!" />
+  <title>GoFind · 急啊!</title>
+  <style>
+    :root { --accent:#0c8599; --accent-d:#0b7285; --bg:#ecf6f8; --card:#fff; --text:#13242a; --muted:#566a70; --line:#d3e6ea; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:var(--accent); }
+    .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .nav-row { display:flex; gap:8px; margin-top:12px; }
+    .nav-row a { flex:1; text-align:center; font-size:13px; padding:8px 6px; border-radius:999px; text-decoration:none;
+      background:#dcf0f3; color:var(--accent-d); border:1px solid var(--line); font-weight:600; }
+    .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:0 0 12px; }
+    .status { font-size:13px; color:var(--muted); } .status.err { color:#c92a2a; }
+    label { display:block; font-size:12px; font-weight:700; color:var(--muted); margin:6px 0 6px; }
+    .cats { display:flex; gap:8px; flex-wrap:wrap; }
+    .cat { flex:1; min-width:84px; } .cat input { position:absolute; opacity:0; pointer-events:none; }
+    .cat label { display:flex; flex-direction:column; align-items:center; gap:4px; margin:0; padding:12px 4px; border:1.5px solid var(--line);
+      border-radius:12px; background:#fff; cursor:pointer; font-size:13px; font-weight:600; }
+    .cat label .e { font-size:24px; }
+    .cat input:checked + label { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .opts { display:flex; gap:8px; margin-top:6px; } .opt { flex:1; } .opt input { position:absolute; opacity:0; pointer-events:none; }
+    .opt label { display:block; margin:0; text-align:center; padding:11px 4px; border:1.5px solid var(--line); border-radius:11px; font-size:14px; font-weight:600; cursor:pointer; background:#fff; }
+    .opt input:checked + label { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btn { display:block; width:100%; padding:15px; border:none; border-radius:12px; background:var(--accent); color:#fff; font-size:17px; font-weight:800; cursor:pointer; margin-top:12px; }
+    .btn:disabled { opacity:.55; }
+    .item { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; background:#fbfeff; display:flex; align-items:center; gap:12px; }
+    .item .e { font-size:24px; } .item .n { font-weight:700; } .item .d { font-size:12px; color:var(--muted); margin-top:2px; }
+    .item a { margin-left:auto; font-size:13px; padding:9px 12px; border-radius:9px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; white-space:nowrap; }
+    .empty { color:var(--muted); font-size:14px; text-align:center; padding:10px; }
+    .hide { display:none !important; }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Go<span>Find</span> · 急啊!</h1>
+    <div class="sub">出門救急 — 找最近的廁所 / 超商 / ATM / 藥局 / 加油站</div>
+    <div class="nav-row">
+      <a href="hub.html">🎒 全部服務 · Day-A-GoGo</a>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>📍 你的位置</h2>
+    <div id="locStatus" class="status">正在定位…</div>
+  </div>
+
+  <div class="card">
+    <h2>🔎 要找什麼</h2>
+    <div class="cats">
+      <div class="cat"><input type="radio" name="cat" id="c_toilets" value="toilets" checked /><label for="c_toilets"><span class="e">🚻</span>廁所</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_conv" value="convenience" /><label for="c_conv"><span class="e">🏪</span>超商</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_atm" value="atm" /><label for="c_atm"><span class="e">🏧</span>ATM</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_pharm" value="pharmacy" /><label for="c_pharm"><span class="e">💊</span>藥局</label></div>
+      <div class="cat"><input type="radio" name="cat" id="c_fuel" value="fuel" /><label for="c_fuel"><span class="e">⛽</span>加油站</label></div>
+    </div>
+    <label style="margin-top:12px;">搜尋範圍</label>
+    <div class="opts">
+      <div class="opt"><input type="radio" name="rad" id="r1" value="1000" checked /><label for="r1">1 km</label></div>
+      <div class="opt"><input type="radio" name="rad" id="r2" value="2000" /><label for="r2">2 km</label></div>
+      <div class="opt"><input type="radio" name="rad" id="r3" value="3000" /><label for="r3">3 km</label></div>
+    </div>
+    <button class="btn" id="findBtn">🔍 搜尋</button>
+  </div>
+
+  <div class="card hide" id="resultCard">
+    <h2 id="resultHead">結果</h2>
+    <div id="list"></div>
+  </div>
+
+  <footer>GoFind · 資料 OpenStreetMap(免費)</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var picked = function (n) { var x = document.querySelector('input[name="' + n + '"]:checked'); return x ? x.value : ""; };
+  var here = null;
+
+  var CATS = {
+    toilets:     { label:"廁所", e:"🚻", sel:'["amenity"="toilets"]', fb:"公廁" },
+    convenience: { label:"超商", e:"🏪", sel:'["shop"="convenience"]', fb:"便利商店" },
+    atm:         { label:"ATM",  e:"🏧", sel:'["amenity"="atm"]', fb:"ATM" },
+    pharmacy:    { label:"藥局", e:"💊", sel:'["amenity"="pharmacy"]', fb:"藥局" },
+    fuel:        { label:"加油站", e:"⛽", sel:'["amenity"="fuel"]', fb:"加油站" }
+  };
+  var OVERPASS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter"
+  ];
+  function overpass(q, i) {
+    i = i || 0;
+    if (i >= OVERPASS.length) return Promise.reject(new Error("所有節點都連不上"));
+    var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var to = setTimeout(function () { if (ctrl) ctrl.abort(); }, 18000);
+    return fetch(OVERPASS[i], { method: "POST", body: "data=" + encodeURIComponent(q), signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .catch(function () { clearTimeout(to); return overpass(q, i + 1); });
+  }
+  function dist(aLat, aLng, bLat, bLng) {
+    var R = 6371000, toR = Math.PI / 180, dLat = (bLat - aLat) * toR, dLng = (bLng - aLng) * toR;
+    var s = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(aLat*toR)*Math.cos(bLat*toR)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+  function fmtDist(m) { return m < 1000 ? Math.round(m) + " m" : (m/1000).toFixed(1) + " km"; }
+
+  function initLocation() {
+    if (!navigator.geolocation) { el("locStatus").textContent = "此瀏覽器無法定位。"; return; }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      el("locStatus").textContent = "✅ 已定位,選類別後按搜尋";
+    }, function (err) {
+      el("locStatus").className = "status err";
+      el("locStatus").textContent = (err.code === 1) ? "定位被拒,請允許定位後重新整理。" : "無法取得位置。";
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  }
+
+  function find() {
+    if (!here) { alert("尚未取得你的位置,請允許定位後再試。"); return; }
+    var cat = CATS[picked("cat")], radius = picked("rad") || "1000";
+    var btn = el("findBtn"); btn.disabled = true; var old = btn.textContent; btn.textContent = "搜尋中…";
+    var q = "[out:json][timeout:25];(" +
+      'node' + cat.sel + '(around:' + radius + ',' + here.lat + ',' + here.lng + ');' +
+      'way' + cat.sel + '(around:' + radius + ',' + here.lat + ',' + here.lng + ');' +
+      ");out center 120;";
+    overpass(q)
+      .then(function (d) {
+        var list = (d.elements || []).map(function (e) {
+          var lat = e.lat != null ? e.lat : (e.center && e.center.lat);
+          var lng = e.lon != null ? e.lon : (e.center && e.center.lon);
+          if (!lat || !lng) return null;
+          var t = e.tags || {};
+          var name = t.name || t.brand || t.operator || cat.fb;
+          return { name: name, lat: lat, lng: lng, d: dist(here.lat, here.lng, lat, lng) };
+        }).filter(Boolean).sort(function (a, b) { return a.d - b.d; }).slice(0, 50);
+        render(list, cat, radius);
+      })
+      .catch(function (e) {
+        el("list").innerHTML = '<div class="empty" style="color:#c92a2a">搜尋失敗:' + (e.message || e) + '<br>請稍後再試。</div>';
+        el("resultCard").classList.remove("hide");
+      })
+      .then(function () { btn.disabled = false; btn.textContent = old; });
+  }
+
+  function render(list, cat, radius) {
+    el("resultHead").textContent = cat.e + " 附近的" + cat.label + "(" + (radius/1000) + " km)";
+    var box = el("list");
+    if (!list.length) { box.innerHTML = '<div class="empty">這個範圍內找不到登錄的' + cat.label + ',試試加大範圍。</div>'; el("resultCard").classList.remove("hide"); return; }
+    box.innerHTML = "";
+    list.forEach(function (r) {
+      var dir = "https://www.google.com/maps/dir/?api=1&origin=" + here.lat + "," + here.lng + "&destination=" + r.lat + "," + r.lng;
+      var div = document.createElement("div"); div.className = "item";
+      div.innerHTML = '<span class="e">' + cat.e + '</span><div><div class="n"></div><div class="d">距離約 ' + fmtDist(r.d) + '</div></div>' +
+        '<a href="' + dir + '" target="_blank" rel="noopener">🧭 帶我去</a>';
+      div.querySelector(".n").textContent = r.name;
+      box.appendChild(div);
+    });
+    el("resultCard").classList.remove("hide");
+    el("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  el("findBtn").addEventListener("click", find);
+  initLocation();
+})();
+</script>
+</body>
+</html>

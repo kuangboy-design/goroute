@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4263eb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Day-A-GoGo" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <title>Day-A-GoGo · 全部服務</title>
+  <style>
+    :root { --bg:#eef1f8; --card:#fff; --text:#161b29; --muted:#5a6377; --line:#dce0ec; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html { min-height:100%; background:linear-gradient(180deg,#fff3da 0%,#ffe6cf 24%,#ffe0d3 42%,#e7f5f1 74%,#dbeff0 100%); background-attachment:fixed; }
+    body { margin:0 auto; max-width:560px; background:transparent; color:var(--text); position:relative;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    .deco { position:fixed; pointer-events:none; z-index:-1; }
+    .deco.p1 { top:130px; left:-14px; font-size:82px; opacity:.16; transform:rotate(-12deg); }
+    .deco.p2 { bottom:4px; right:-12px; font-size:96px; opacity:.16; transform:rotate(8deg); }
+    .deco.p3 { bottom:72px; left:-4px; font-size:50px; opacity:.14; }
+    header { text-align:center; padding:24px 12px 22px; margin:0 -16px 16px; border-radius:0 0 26px 26px;
+      background:linear-gradient(160deg,#ffe7a8 0%,#ffcf9e 42%,#ffc1b0 64%,#a9dde6 100%); box-shadow:0 4px 14px rgba(180,140,90,.25); }
+    .tropic { font-size:30px; letter-spacing:8px; line-height:1; margin-bottom:6px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.12)); }
+    h1 { font-size:30px; margin:0; letter-spacing:.5px;
+      background:linear-gradient(95deg,#e8590c,#d6336c,#0c8599); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }
+    .sub { color:#6b5536; font-size:13px; margin-top:6px; font-weight:600; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .tile { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 12px; text-align:center;
+      text-decoration:none; color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.06); transition:transform .05s ease; }
+    .tile:active { transform:scale(.96); }
+    .tile .e { font-size:34px; line-height:1; }
+    .tile .n { font-weight:800; margin-top:8px; font-size:16px; }
+    .tile .d { font-size:12px; color:var(--muted); margin-top:3px; line-height:1.4; }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:18px; line-height:1.7; }
+  </style>
+</head>
+<body>
+  <div class="deco p1">🌴</div>
+  <div class="deco p2">🌴</div>
+  <div class="deco p3">🐚</div>
+
+  <header>
+    <div class="tropic">🌴 ⛱️ 🍹 🏖️ 🌺</div>
+    <h1>Day-A-GoGo</h1>
+    <div class="sub">躺著就把事搞定 · 一站式生活＆旅遊小工具 🌺</div>
+  </header>
+
+  <div class="grid">
+    <a class="tile" href="index.html"><div class="e">🧭</div><div class="n">GoRoute</div><div class="d">定位・天氣・路線導航</div></a>
+    <a class="tile" href="howgo.html"><div class="e">🍜</div><div class="n">HowGo 吃啥</div><div class="d">附近吃什麼</div></a>
+    <a class="tile" href="services.html"><div class="e">🍽️</div><div class="n">Kuang之客棧</div><div class="d">訂餐廳・飯店・機票</div></a>
+    <a class="tile" href="gofind.html"><div class="e">🚻</div><div class="n">GoFind 急啊!</div><div class="d">廁所・超商・ATM・藥局</div></a>
+    <a class="tile" href="songyou.html"><div class="e">🧳</div><div class="n">SongYou 爽旅</div><div class="d">AI 即興行程</div></a>
+    <a class="tile" href="tickets.html"><div class="e">🎟️</div><div class="n">GoTicket</div><div class="d">演唱會／球賽售票快訊</div></a>
+    <a class="tile" href="gosplit.html"><div class="e">🧾</div><div class="n">GoSplit 麥走!</div><div class="d">分帳 AA・小費</div></a>
+    <a class="tile" href="goexchange.html"><div class="e">💱</div><div class="n">GoExchange</div><div class="d">即時匯率換算</div></a>
+    <a class="tile" href="wear.html"><div class="e">👕</div><div class="n">今天穿什麼</div><div class="d">天氣穿搭建議</div></a>
+    <a class="tile" href="air.html"><div class="e">😷</div><div class="n">AirGo 不臭</div><div class="d">空氣品質・UV</div></a>
+    <a class="tile" href="spin.html"><div class="e">🎯</div><div class="n">吃什麼轉盤</div><div class="d">隨機幫你決定</div></a>
+  </div>
+
+  <footer>Day-A-GoGo · 把所有服務收在一起<br>加入主畫面即可當 App 使用</footer>
+</body>
+</html>

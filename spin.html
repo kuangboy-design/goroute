@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#7048e8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <meta name="apple-mobile-web-app-title" content="吃什麼轉盤" />
+  <title>吃什麼轉盤</title>
+  <style>
+    :root { --accent:#7048e8; --accent-d:#5f3dc4; --bg:#f1eefb; --card:#fff; --text:#1c1726; --muted:#665d77; --line:#e2dcf3; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:var(--accent); }
+    .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .nav-row { display:flex; gap:8px; margin-top:12px; }
+    .nav-row a { flex:1; text-align:center; font-size:13px; padding:8px 6px; border-radius:999px; text-decoration:none;
+      background:#eae4fb; color:var(--accent-d); border:1px solid var(--line); font-weight:600; }
+    .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:0 0 10px; }
+    .display { text-align:center; padding:26px 10px; border-radius:16px; background:linear-gradient(135deg,#7048e8,#9775fa); color:#fff; }
+    .display .pick { font-size:40px; font-weight:900; line-height:1.2; min-height:48px; }
+    .display .hint { font-size:13px; opacity:.85; margin-top:8px; }
+    .btn { display:block; width:100%; padding:16px; border:none; border-radius:12px; background:var(--accent); color:#fff; font-size:18px; font-weight:800; cursor:pointer; margin-top:12px; }
+    .btn:disabled { opacity:.6; }
+    textarea { width:100%; min-height:120px; font-size:16px; padding:12px; border:1px solid var(--line); border-radius:10px; resize:vertical; font-family:inherit; }
+    textarea:focus { outline:none; border-color:var(--accent); }
+    .note { font-size:11px; color:var(--muted); margin-top:8px; line-height:1.6; }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>吃什麼<span>轉盤</span> 🎯</h1>
+    <div class="sub">選擇障礙救星 — 讓命運決定今天吃啥!</div>
+    <div class="nav-row">
+      <a href="hub.html">🎒 全部服務 · Day-A-GoGo</a>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="display">
+      <div class="pick" id="pick">？</div>
+      <div class="hint" id="hint">按下方按鈕開始</div>
+    </div>
+    <button class="btn" id="spinBtn">🎲 幫我決定!</button>
+  </div>
+
+  <div class="card">
+    <h2>🍱 候選清單(一行一個)</h2>
+    <textarea id="opts">便當
+牛肉麵
+火鍋
+日式料理
+韓式炸雞
+自助餐
+早午餐
+鹹酥雞
+披薩
+壽司
+小吃</textarea>
+    <div class="note">想吃什麼自己改;每行一個選項。也可貼上 HowGo 找到的店名來抽。</div>
+  </div>
+
+  <footer>吃什麼轉盤 · 純前端,不需網路</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  function options() {
+    return el("opts").value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+  function rnd(n) { return Math.floor(Math.random() * n); }
+
+  function spin() {
+    var opts = options();
+    if (opts.length < 2) { alert("請至少輸入 2 個選項"); return; }
+    var btn = el("spinBtn"); btn.disabled = true;
+    el("hint").textContent = "轉啊轉…";
+    var ticks = 0, max = 18 + rnd(8), delay = 60;
+    function step() {
+      el("pick").textContent = opts[rnd(opts.length)];
+      ticks++;
+      if (ticks >= max) {
+        var finalPick = opts[rnd(opts.length)];
+        el("pick").textContent = finalPick;
+        el("hint").textContent = "今天就吃「" + finalPick + "」吧!🎉";
+        btn.disabled = false;
+        return;
+      }
+      delay += 8;  // gradually slow down
+      setTimeout(step, delay);
+    }
+    step();
+  }
+
+  el("spinBtn").addEventListener("click", spin);
+})();
+</script>
+</body>
+</html>

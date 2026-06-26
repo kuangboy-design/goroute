@@ -1,17 +1,13 @@
 {
-  "name": "GoRoute",
-  "short_name": "GoRoute",
-  "description": "Your location, the weather, and one tap to Google Maps navigation.",
-  "start_url": "./index.html",
+  "name": "Day-A-GoGo",
+  "short_name": "Day-A-GoGo",
+  "description": "一站式生活＆旅遊小工具:導航、天氣、訂位、售票、AI 行程、分帳、匯率等。",
+  "start_url": "./hub.html",
   "display": "standalone",
-  "background_color": "#f1f3f6",
-  "theme_color": "#1a73e8",
+  "background_color": "#eef1f8",
+  "theme_color": "#4263eb",
   "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Crect width='512' height='512' rx='112' fill='%231a73e8'/%3E%3Cpath d='M256 96c-66 0-120 54-120 120 0 90 120 200 120 200s120-110 120-200c0-66-54-120-120-120zm0 168a48 48 0 110-96 48 48 0 010 96z' fill='white'/%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
+    { "src": "./appicon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "./appicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
