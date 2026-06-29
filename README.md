@@ -23,6 +23,7 @@
 | `spin.html` | **吃什麼轉盤** | 隨機幫你決定吃什麼 | 無 |
 | `gotime.html` | **GoTime 時差** | 台北 vs 各國即時時間/時差 | 無 |
 | `goconvert.html` | **GoConvert** | 長度/重量/溫度/鞋碼尺寸換算 | 無 |
+| `go2go.html` | **Go2Go 怎麼去** | 建立行程→存地點(加入時驗證地址)→AI 比較 A→B 交通(地鐵/公車/計程車/步行)+ Google 地圖實際路線;可**一鍵載入東京親子遊範例** | **需 Groq 金鑰**(與 SongYou 共用) |
 
 輔助檔:`manifest.json`(PWA 設定,指向 hub)、`tw-districts.js`(GoRoute 縣市/區資料)。
 
@@ -45,6 +46,7 @@ air.html
 spin.html
 gotime.html
 goconvert.html
+go2go.html
 manifest.json
 tw-districts.js
 appicon-180.png

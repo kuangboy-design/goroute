@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#6699cc" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Go2Go 怎麼去" />
+  <link rel="apple-touch-icon" href="appicon-180.png" />
+  <title>Go2Go · A 到 B 怎麼去</title>
+  <style>
+    :root { --accent:#6699cc; --accent-d:#4f80b3; --bg:#eceff3; --card:#fff; --text:#2a323c; --muted:#69737f; --line:#dce2e9; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+      padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:var(--accent); }
+    .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .nav-row { display:flex; gap:8px; margin-top:12px; }
+    .nav-row a { flex:1; text-align:center; font-size:13px; padding:8px 6px; border-radius:999px; text-decoration:none;
+      background:#e6edf4; color:var(--accent-d); border:1px solid var(--line); font-weight:600; }
+    .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:0 0 12px; }
+    label { display:block; font-size:12px; font-weight:700; color:var(--muted); margin:10px 0 6px; }
+    input, select { width:100%; font-size:16px; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text); -webkit-appearance:none; appearance:none; }
+    input:focus, select:focus { outline:none; border-color:var(--accent); }
+    .pair { display:flex; gap:10px; } .pair > div { flex:1; min-width:0; }
+    .addrow { display:flex; gap:8px; } .addrow input { flex:1; }
+    .addrow button, .icobtn { width:54px; border:none; border-radius:10px; background:var(--accent); color:#fff; font-size:22px; font-weight:800; cursor:pointer; }
+    .loc { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); }
+    .loc:last-child { border-bottom:none; } .loc .nm { flex:1; } .loc .nm b { font-size:15px; } .loc .ad { font-size:12px; color:var(--muted); margin-top:2px; }
+    .loc .ad.bad { color:#c92a2a; }
+    .loc button { width:36px; height:36px; border:none; border-radius:9px; background:#fde8e8; color:#c92a2a; font-size:15px; cursor:pointer; flex:none; }
+    .swap { width:100%; margin-top:8px; padding:10px; border:1.5px solid var(--accent); background:#fff; color:var(--accent-d); border-radius:10px; font-weight:700; cursor:pointer; }
+    .check { display:flex; align-items:center; gap:8px; margin-top:10px; } .check input { width:auto; } .check label { margin:0; font-size:14px; font-weight:600; }
+    .btn { display:block; width:100%; padding:15px; border:none; border-radius:12px; background:var(--accent); color:#fff; font-size:17px; font-weight:800; cursor:pointer; margin-top:12px; }
+    .btn:disabled { opacity:.55; }
+    .key-ok { color:var(--accent-d); font-size:12px; font-weight:700; margin-top:6px; }
+    .note { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; } .note a { color:var(--accent-d); }
+    .plan { line-height:1.8; font-size:15px; } .plan h3 { font-size:16px; color:var(--accent-d); margin:14px 0 4px; }
+    .maps { display:flex; gap:8px; margin-top:12px; }
+    .maps a { flex:1; text-align:center; font-size:13px; padding:11px 4px; border-radius:10px; text-decoration:none; background:#e6edf4; color:var(--accent-d); border:1px solid var(--line); font-weight:700; }
+    .hide { display:none !important; }
+    footer { text-align:center; font-size:11px; color:var(--muted); margin-top:16px; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Go<span>2</span>Go · 怎麼去 🚇</h1>
+    <div class="sub">先建立行程,存好地點(加入時驗證地址),再讓 AI 規劃 A→B</div>
+    <div class="nav-row"><a href="hub.html">🎒 全部服務 · Day-A-GoGo</a></div>
+  </header>
+
+  <!-- AI KEY -->
+  <div class="card">
+    <h2>🔑 AI 金鑰(與 SongYou 共用)</h2>
+    <input id="gkey" type="password" placeholder="貼上 Groq 金鑰(gsk_...)" autocomplete="off" />
+    <button class="btn" id="saveKey" style="margin-top:8px;padding:11px;font-size:14px;">儲存金鑰</button>
+    <div id="keyOk" class="key-ok hide">✅ 金鑰已設定</div>
+    <div class="note">免費金鑰:<a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq Console</a>(免信用卡)。</div>
+  </div>
+
+  <!-- TRIPS -->
+  <div class="card">
+    <h2>🧳 旅遊行程</h2>
+    <div class="pair">
+      <div style="flex:1"><label>目前行程</label><select id="tripSel"></select></div>
+      <div style="flex:none"><label>&nbsp;</label><button class="icobtn" id="delTrip" title="刪除此行程">🗑️</button></div>
+    </div>
+    <button class="swap" id="newToggle">➕ 建立新行程</button>
+    <button class="swap" id="sampleBtn" style="margin-top:8px;">🗾 載入「東京親子遊」範例</button>
+    <div id="newForm" class="hide">
+      <label>旅遊標題</label>
+      <input id="tTitle" type="text" placeholder="例如 東京親子遊 2026" />
+      <div class="pair" style="margin-top:4px;">
+        <div><label>國家</label><select id="tCountry"><option value="">— 國家 —</option></select></div>
+        <div><label>城市</label><select id="tCity"><option value="">— 城市 —</option></select></div>
+      </div>
+      <button class="btn" id="createTrip">建立行程</button>
+    </div>
+    <div id="tripInfo" class="note"></div>
+  </div>
+
+  <!-- LOCATIONS -->
+  <div class="card" id="locCard">
+    <h2>📍 我的地點(最多 10 個)</h2>
+    <div class="addrow">
+      <input id="locInput" type="text" placeholder="地點名稱,例如 淺草寺 / 新宿車站 / 飯店" />
+      <button id="addLoc">＋</button>
+    </div>
+    <div id="addStatus" class="note"></div>
+    <div id="locList" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- A to B -->
+  <div class="card" id="abCard">
+    <h2>🧭 從 A 到 B</h2>
+    <div class="pair">
+      <div><label>出發地 A</label><select id="from"></select></div>
+      <div><label>目的地 B</label><select id="to"></select></div>
+    </div>
+    <button class="swap" id="swap">⇅ 對調</button>
+    <div class="check"><input type="checkbox" id="kid" /><label for="kid">👶 帶小孩(嬰兒車/電梯/少走路優先)</label></div>
+    <button class="btn" id="planBtn">🤖 AI 規劃路線</button>
+  </div>
+
+  <div class="card hide" id="resultCard">
+    <h2>🚀 建議路線</h2>
+    <div id="plan" class="plan"></div>
+    <div class="maps" id="maps"></div>
+    <div class="note">⚠️ 時間與票價為 AI 概估;實際以「看實際路線」的 Google 地圖為準。</div>
+  </div>
+
+  <footer>Go2Go · AI 由 Groq · 地址驗證/實際路線由 OpenStreetMap + Google 地圖</footer>
+
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var enc = function (s) { return encodeURIComponent(s || ""); };
+  var KEY = "songyou_groqkey", TRIPS = "go2go_trips", CUR = "go2go_cur";
+
+  var COUNTRIES = {
+    "Taiwan":["Taipei","New Taipei","Taoyuan","Taichung","Tainan","Kaohsiung","Hualien"],
+    "Japan":["Tokyo","Osaka","Kyoto","Nagoya","Sapporo","Fukuoka","Okinawa (Naha)","Yokohama","Nara","Hokkaido"],
+    "South Korea":["Seoul","Busan","Jeju","Incheon"],
+    "Hong Kong":["Hong Kong"], "Macau":["Macau"],
+    "China":["Shanghai","Beijing","Guangzhou","Shenzhen","Chengdu","Hangzhou"],
+    "Thailand":["Bangkok","Chiang Mai","Phuket"], "Vietnam":["Ho Chi Minh City","Hanoi","Da Nang"],
+    "Singapore":["Singapore"], "Malaysia":["Kuala Lumpur","Penang"],
+    "Philippines":["Manila","Cebu"], "Indonesia":["Bali (Denpasar)","Jakarta"],
+    "United States":["Los Angeles","San Francisco","New York","Las Vegas","Seattle","Honolulu"],
+    "Canada":["Vancouver","Toronto"], "United Kingdom":["London"], "France":["Paris"],
+    "Germany":["Frankfurt","Munich","Berlin"], "Italy":["Rome","Milan","Venice"],
+    "Australia":["Sydney","Melbourne"], "New Zealand":["Auckland"], "United Arab Emirates":["Dubai"]
+  };
+
+  function loadTrips(){ try { return JSON.parse(localStorage.getItem(TRIPS) || "[]"); } catch (e) { return []; } }
+  function saveTrips(a){ try { localStorage.setItem(TRIPS, JSON.stringify(a)); } catch (e) {} }
+  function getCur(){ try { return localStorage.getItem(CUR) || ""; } catch (e) { return ""; } }
+  function setCur(id){ try { localStorage.setItem(CUR, id); } catch (e) {} }
+  function currentTrip(){ var a = loadTrips(), id = getCur(); return a.filter(function(t){return t.id===id;})[0] || a[0] || null; }
+  function getKey(){ try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+
+  // ---- create-trip form: country -> city ----
+  (function fillCountries(){ var c = el("tCountry"); Object.keys(COUNTRIES).forEach(function(k){ var o=document.createElement("option"); o.value=k; o.textContent=k; c.appendChild(o); }); })();
+  el("tCountry").addEventListener("change", function(){
+    var city = el("tCity"); city.innerHTML = '<option value="">— 城市 —</option>';
+    (COUNTRIES[el("tCountry").value]||[]).forEach(function(ct){ var o=document.createElement("option"); o.value=ct; o.textContent=ct; city.appendChild(o); });
+  });
+  el("newToggle").addEventListener("click", function(){ el("newForm").classList.toggle("hide"); });
+  el("createTrip").addEventListener("click", function(){
+    var title = el("tTitle").value.trim(), country = el("tCountry").value, city = el("tCity").value;
+    if (!title || !country || !city) { alert("請填旅遊標題、國家、城市"); return; }
+    var a = loadTrips(); var id = "t" + (loadTrips().length) + "_" + title.replace(/\s/g,"").slice(0,6) + "_" + Math.floor(Math.random()*1000);
+    a.push({ id:id, title:title, country:country, city:city, locs:[] }); saveTrips(a); setCur(id);
+    el("tTitle").value=""; el("tCountry").value=""; el("tCity").innerHTML='<option value="">— 城市 —</option>'; el("newForm").classList.add("hide");
+    renderAll();
+  });
+  el("delTrip").addEventListener("click", function(){
+    var t = currentTrip(); if (!t) return;
+    if (!confirm("刪除行程「" + t.title + "」?")) return;
+    var a = loadTrips().filter(function(x){return x.id!==t.id;}); saveTrips(a); setCur(a[0]?a[0].id:""); renderAll();
+  });
+  el("tripSel").addEventListener("change", function(){ setCur(el("tripSel").value); renderAll(); });
+
+  // ---- geocode to validate an address ----
+  function geocode(q){
+    return fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + enc(q), { headers:{ "Accept":"application/json" } })
+      .then(function(r){ return r.json(); })
+      .then(function(arr){ return (arr && arr.length) ? { label:arr[0].display_name, lat:+arr[0].lat, lon:+arr[0].lon } : null; })
+      .catch(function(){ return null; });
+  }
+  // try several query forms (helps both Chinese & English) — first hit wins
+  function geocodeFirst(qs, i){
+    i = i || 0;
+    if (i >= qs.length) return Promise.resolve(null);
+    return geocode(qs[i]).then(function(r){ return r || geocodeFirst(qs, i + 1); });
+  }
+  function cityBase(city){ return String(city).replace(/\s*\(.*\)\s*/, "").trim(); }  // "Okinawa (Naha)" -> "Okinawa"
+  function addLoc(){
+    var t = currentTrip(); if (!t) { alert("請先建立行程"); return; }
+    var v = el("locInput").value.trim(); if (!v) return;
+    if (t.locs.length >= 10) { alert("最多 10 個地點"); return; }
+    if (t.locs.some(function(l){return l.name===v;})) { alert("已有這個地點"); return; }
+    el("addStatus").textContent = "🔎 確認「" + v + "」地址中…";
+    var cb = cityBase(t.city);
+    var qs = [ v + ", " + cb + ", " + t.country, v + " " + cb, v + ", " + t.country, v ];
+    geocodeFirst(qs).then(function(res){
+      if (!res) {
+        if (!confirm("找不到「" + v + "」的地址,仍要加入嗎?(規劃時可能不準)")) { el("addStatus").textContent=""; return; }
+        t.locs.push({ name:v, label:"", ok:false });
+      } else {
+        t.locs.push({ name:v, label:res.label, lat:res.lat, lon:res.lon, ok:true });
+      }
+      var a = loadTrips(); for (var i=0;i<a.length;i++){ if(a[i].id===t.id){ a[i]=t; } } saveTrips(a);
+      el("locInput").value=""; el("addStatus").textContent=""; renderAll();
+    });
+  }
+  function delLoc(idx){
+    var t = currentTrip(); if (!t) return; t.locs.splice(idx,1);
+    var a = loadTrips(); for (var i=0;i<a.length;i++){ if(a[i].id===t.id){ a[i]=t; } } saveTrips(a); renderAll();
+  }
+
+  // ---- render ----
+  function renderAll(){
+    var trips = loadTrips(), t = currentTrip();
+    var sel = el("tripSel"); sel.innerHTML = "";
+    if (!trips.length) { var o=document.createElement("option"); o.textContent="(尚無行程,請建立)"; o.value=""; sel.appendChild(o); }
+    trips.forEach(function(x){ var o=document.createElement("option"); o.value=x.id; o.textContent=x.title+"("+x.city+")"; if(t&&x.id===t.id)o.selected=true; sel.appendChild(o); });
+    var has = !!t;
+    el("locCard").classList.toggle("hide", !has);
+    el("abCard").classList.toggle("hide", !has);
+    el("tripInfo").textContent = has ? ("目前:" + t.title + " · " + t.city + ", " + t.country) : "尚未建立任何行程,請按「建立新行程」。";
+    if (has) { renderLocs(t); fillAB(t); }
+  }
+  function renderLocs(t){
+    var box = el("locList");
+    if (!t.locs.length) { box.innerHTML = '<div class="note">還沒有地點。新增景點/車站/住宿,加入時會自動驗證地址。</div>'; return; }
+    box.innerHTML = "";
+    t.locs.forEach(function(l, i){
+      var d = document.createElement("div"); d.className = "loc";
+      d.innerHTML = '<div class="nm"><b></b><div class="ad"></div></div><button>🗑️</button>';
+      d.querySelector("b").textContent = (i+1) + ". " + l.name;
+      var ad = d.querySelector(".ad");
+      if (l.ok) { ad.textContent = "✅ " + l.label; } else { ad.textContent = "⚠️ 未驗證地址"; ad.className = "ad bad"; }
+      d.querySelector("button").addEventListener("click", function(){ delLoc(i); });
+      box.appendChild(d);
+    });
+  }
+  function fillAB(t){
+    var f = el("from"), to = el("to"); var fv=f.value, tv=to.value; f.innerHTML=""; to.innerHTML="";
+    t.locs.forEach(function(l){ var a=document.createElement("option"); a.value=l.name; a.textContent=l.name; f.appendChild(a);
+      var b=document.createElement("option"); b.value=l.name; b.textContent=l.name; to.appendChild(b); });
+    if (fv) f.value=fv; if (tv) to.value=tv;
+    if (!to.value && t.locs.length>1) to.selectedIndex = 1;
+  }
+
+  // ---- key ----
+  function showKey(){ if (getKey()) { el("keyOk").classList.remove("hide"); el("gkey").placeholder="金鑰已設定(可重新輸入覆蓋)"; } }
+  el("saveKey").addEventListener("click", function(){ var k=el("gkey").value.trim(); if(!k){alert("請貼上金鑰");return;} try{localStorage.setItem(KEY,k);}catch(e){} el("gkey").value=""; showKey(); });
+
+  function mdToHtml(md){
+    var s = md.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    s = s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    s = s.replace(/^#{1,6}\s*(.+)$/gm,"<h3>$1</h3>");
+    s = s.replace(/^\s*[-*]\s+(.+)$/gm,"<li>$1</li>");
+    s = s.replace(/\n/g,"<br>"); return s;
+  }
+  function locByName(t, n){ return t.locs.filter(function(l){return l.name===n;})[0]; }
+  function param(l, t){ return (l && l.lat!=null) ? (l.lat+","+l.lon) : ((l?l.name:"")+" "+t.city); }
+  function buildMaps(t, A, B){
+    var base = "https://www.google.com/maps/dir/?api=1&origin=" + enc(param(A,t)) + "&destination=" + enc(param(B,t)) + "&travelmode=";
+    el("maps").innerHTML =
+      '<a href="' + base + 'transit" target="_blank" rel="noopener">🚆 大眾運輸</a>' +
+      '<a href="' + base + 'driving" target="_blank" rel="noopener">🚕 計程車</a>' +
+      '<a href="' + base + 'walking" target="_blank" rel="noopener">🚶 步行</a>';
+  }
+
+  function plan(){
+    var key = getKey(); if (!key) { alert("請先儲存 Groq 金鑰(可在 SongYou 取得同一把)"); return; }
+    var t = currentTrip(); if (!t) { alert("請先建立行程"); return; }
+    var aN = el("from").value, bN = el("to").value;
+    if (!aN || !bN) { alert("請先新增並選擇出發地與目的地"); return; }
+    if (aN === bN) { alert("出發地與目的地相同 😅"); return; }
+    var A = locByName(t,aN), B = locByName(t,bN), kid = el("kid").checked;
+    var prompt =
+      "我在「" + t.city + "," + t.country + "」旅遊。請規劃從「" + aN + "」到「" + bN + "」的交通方式。\n" +
+      "比較可行方式(地鐵/電車、公車、計程車、步行),每種給:方式、預估總時間、預估花費(當地貨幣)、" +
+      "一句說明(轉乘次數" + (kid ? "、是否適合嬰兒車/小孩、有無電梯、步行多寡" : "") + ")。\n" +
+      (kid ? "我會帶小孩(可能推嬰兒車),請優先少走路、少轉乘、有電梯。\n" : "") +
+      "用繁體中文 markdown,**最推薦的放最上面標「⭐ 推薦」**,最後一句總結。時間票價概估即可。";
+    var btn = el("planBtn"); btn.disabled = true; var old = btn.textContent; btn.textContent = "AI 規劃中…";
+    fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + key },
+      body: JSON.stringify({ model:"llama-3.3-70b-versatile", temperature:0.6, messages:[{ role:"user", content:prompt }] })
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.error) throw new Error((d.error && d.error.message) || "API 錯誤");
+        var txt = d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+        if (!txt) throw new Error("沒有取得回應");
+        el("plan").innerHTML = mdToHtml(txt); buildMaps(t, A, B);
+        el("resultCard").classList.remove("hide"); el("resultCard").scrollIntoView({ behavior:"smooth", block:"start" });
+      })
+      .catch(function(e){
+        var msg=(e.message||e)+"", tip="請確認金鑰正確。";
+        if (/quota|exhaust|429|rate|limit/i.test(msg)) tip="額度/速率限制:等一分鐘再試。";
+        else if (/failed to fetch|cors|networkerror|load failed/i.test(msg)) tip="連線問題,請檢查網路。";
+        el("plan").innerHTML = '<span style="color:#c92a2a">規劃失敗:'+msg+'</span><br><br>'+tip; buildMaps(t, A, B);
+        el("resultCard").classList.remove("hide");
+      })
+      .then(function(){ btn.disabled=false; btn.textContent=old; });
+  }
+
+  function loadSample(){
+    var a = loadTrips();
+    if (a.some(function(t){ return t.title === "東京親子遊"; }) && !confirm("已有「東京親子遊」,要再建立一個嗎?")) return;
+    var id = "t_tokyo_" + Math.floor(Math.random() * 100000);
+    a.push({ id:id, title:"東京親子遊", country:"Japan", city:"Tokyo", locs:[] }); saveTrips(a); setCur(id); renderAll();
+    var names = ["淺草寺","東京晴空塔","上野動物園","新宿御苑","澀谷","台場 DiverCity","東京迪士尼樂園"];
+    el("addStatus").textContent = "🗾 載入範例地點並驗證地址中…";
+    (function next(i){
+      if (i >= names.length) { el("addStatus").textContent = "✅ 範例已載入"; renderAll(); return; }
+      var v = names[i];
+      geocodeFirst([v + ", Tokyo, Japan", v + " Tokyo", v + ", Japan", v]).then(function(res){
+        var t = currentTrip(); if (!t) return;
+        if (res) t.locs.push({ name:v, label:res.label, lat:res.lat, lon:res.lon, ok:true });
+        else t.locs.push({ name:v, label:"", ok:false });
+        var arr = loadTrips(); for (var k=0;k<arr.length;k++){ if(arr[k].id===t.id) arr[k]=t; } saveTrips(arr);
+        renderAll(); el("addStatus").textContent = "🗾 載入中… (" + (i+1) + "/" + names.length + ")";
+        setTimeout(function(){ next(i+1); }, 400);
+      });
+    })(0);
+  }
+  el("sampleBtn").addEventListener("click", loadSample);
+  el("addLoc").addEventListener("click", addLoc);
+  el("locInput").addEventListener("keydown", function(e){ if (e.key==="Enter") addLoc(); });
+  el("swap").addEventListener("click", function(){ var f=el("from").value; el("from").value=el("to").value; el("to").value=f; });
+  el("planBtn").addEventListener("click", plan);
+  showKey(); renderAll();
+})();
+</script>
+</body>
+</html>
