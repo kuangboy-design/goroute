@@ -13,8 +13,10 @@
     :root { --accent:#6699cc; --accent-d:#4f80b3; --bg:#eceff3; --card:#fff; --text:#2a323c; --muted:#69737f; --line:#dce2e9; }
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     body { margin:0 auto; max-width:560px; background:var(--bg); color:var(--text);
+      display:flex; flex-direction:column;
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
       padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 28px); }
+    header{order:0} #abCard{order:1} #resultCard{order:2} #tripsCard{order:3} #locCard{order:4} #keyCard{order:5} footer{order:6}
     header { padding:20px 4px 8px; } h1 { font-size:25px; margin:0; } h1 span { color:var(--accent); }
     .sub { color:var(--muted); font-size:13px; margin-top:3px; }
     .nav-row { display:flex; gap:8px; margin-top:12px; }
@@ -53,7 +55,7 @@
   </header>
 
   <!-- AI KEY -->
-  <div class="card">
+  <div class="card" id="keyCard">
     <h2>🔑 AI 金鑰(與 SongYou 共用)</h2>
     <input id="gkey" type="password" placeholder="貼上 Groq 金鑰(gsk_...)" autocomplete="off" />
     <button class="btn" id="saveKey" style="margin-top:8px;padding:11px;font-size:14px;">儲存金鑰</button>
@@ -62,14 +64,14 @@
   </div>
 
   <!-- TRIPS -->
-  <div class="card">
+  <div class="card" id="tripsCard">
     <h2>🧳 旅遊行程</h2>
     <div class="pair">
       <div style="flex:1"><label>目前行程</label><select id="tripSel"></select></div>
       <div style="flex:none"><label>&nbsp;</label><button class="icobtn" id="delTrip" title="刪除此行程">🗑️</button></div>
     </div>
     <button class="swap" id="newToggle">➕ 建立新行程</button>
-    <button class="swap" id="sampleBtn" style="margin-top:8px;">🗾 載入「東京親子遊」範例</button>
+    <button class="swap" id="sampleBtn" style="margin-top:8px;">🗺️ 載入此城市範例地點</button>
     <div id="newForm" class="hide">
       <label>旅遊標題</label>
       <input id="tTitle" type="text" placeholder="例如 東京親子遊 2026" />
@@ -266,11 +268,16 @@
     if (aN === bN) { alert("出發地與目的地相同 😅"); return; }
     var A = locByName(t,aN), B = locByName(t,bN), kid = el("kid").checked;
     var prompt =
-      "我在「" + t.city + "," + t.country + "」旅遊。請規劃從「" + aN + "」到「" + bN + "」的交通方式。\n" +
-      "比較可行方式(地鐵/電車、公車、計程車、步行),每種給:方式、預估總時間、預估花費(當地貨幣)、" +
-      "一句說明(轉乘次數" + (kid ? "、是否適合嬰兒車/小孩、有無電梯、步行多寡" : "") + ")。\n" +
-      (kid ? "我會帶小孩(可能推嬰兒車),請優先少走路、少轉乘、有電梯。\n" : "") +
-      "用繁體中文 markdown,**最推薦的放最上面標「⭐ 推薦」**,最後一句總結。時間票價概估即可。";
+      "我在「" + t.city + "," + t.country + "」旅遊,要從「" + aN + "」到「" + bN + "」。\n" +
+      "請提供 2–3 種交通方式(地鐵/電車、公車、計程車、步行組合),**把最推薦的放最上面並標「⭐ 推薦」**。\n" +
+      "每種方式都要給【逐步明細】,格式清楚:\n" +
+      "1. 先步行到哪個車站(約幾分鐘)\n" +
+      "2. 搭哪條路線(例:東京Metro銀座線)、往哪個方向(寫終點站方向)、從哪一站上車、到哪一站下車、約幾站\n" +
+      "3. 若需轉乘:在哪一站、轉乘哪條線、往哪個方向\n" +
+      "4. 下車後步行到目的地(約幾分鐘)\n" +
+      "5. 每一段所需時間;最後標明【總時間】與【總費用(當地貨幣)】\n" +
+      (kid ? "我帶小孩(可能推嬰兒車),請優先少走路、少轉乘、有電梯/無障礙的路線,並在說明中提醒電梯/無障礙資訊。\n" : "") +
+      "請用繁體中文、markdown,分段清楚易讀;時間與票價可為概估。";
     var btn = el("planBtn"); btn.disabled = true; var old = btn.textContent; btn.textContent = "AI 規劃中…";
     fetch("https://api.groq.com/openai/v1/chat/completions", {
       method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + key },
@@ -294,22 +301,47 @@
       .then(function(){ btn.disabled=false; btn.textContent=old; });
   }
 
+  var SPOTS = {
+    "Tokyo":["淺草寺","東京晴空塔","上野動物園","新宿御苑","澀谷","teamLab Planets Tokyo"],
+    "Osaka":["大阪城","日本環球影城","道頓堀","大阪海遊館","通天閣","天保山摩天輪"],
+    "Kyoto":["清水寺","伏見稻荷大社","金閣寺","嵐山","京都車站","二條城"],
+    "Seoul":["景福宮","樂天世界","明洞","南山首爾塔","東大門","弘大"],
+    "Busan":["海雲台","甘川文化村","廣安里海灘","札嘎其市場","釜山塔"],
+    "Bangkok":["大皇宮","臥佛寺","Chatuchak Weekend Market","Siam Paragon","考山路","Safari World Bangkok"],
+    "Singapore":["Gardens by the Bay","Sentosa","Singapore Zoo","Universal Studios Singapore","Merlion Park","Marina Bay Sands"],
+    "Hong Kong":["香港迪士尼樂園","香港海洋公園","太平山頂","尖沙咀星光大道","女人街","昂坪360"],
+    "Taipei":["台北101","士林夜市","台北市立動物園","國立故宮博物院","龍山寺","中正紀念堂"],
+    "New Taipei":["九份老街","十分老街","淡水老街","野柳地質公園","鶯歌老街"],
+    "Kaohsiung":["駁二藝術特區","蓮池潭","西子灣","六合夜市","高雄市立圖書館總館"],
+    "Bali (Denpasar)":["Kuta Beach","Ubud","Tanah Lot","Uluwatu Temple","Waterbom Bali"],
+    "Paris":["艾菲爾鐵塔","羅浮宮","Disneyland Paris","凱旋門","巴黎聖母院","盧森堡公園"],
+    "London":["倫敦眼","大英博物館","白金漢宮","塔橋","海德公園","自然史博物館"],
+    "New York":["中央公園","時代廣場","自由女神像","帝國大廈","美國自然史博物館","布魯克林大橋"],
+    "Los Angeles":["Disneyland","Universal Studios Hollywood","Santa Monica Pier","Griffith Observatory","Hollywood Walk of Fame"],
+    "Sydney":["Sydney Opera House","Sydney Harbour Bridge","Bondi Beach","Taronga Zoo","Darling Harbour"],
+    "Seattle":["Space Needle","Pike Place Market","Seattle Aquarium","Museum of Pop Culture"],
+    "Honolulu":["Waikiki Beach","Diamond Head","Honolulu Zoo","Pearl Harbor"]
+  };
+  function genericSpots(city){ return [city + " Station", city + " Park", city + " Museum", city + " Zoo", city + " Old Town"]; }
   function loadSample(){
-    var a = loadTrips();
-    if (a.some(function(t){ return t.title === "東京親子遊"; }) && !confirm("已有「東京親子遊」,要再建立一個嗎?")) return;
-    var id = "t_tokyo_" + Math.floor(Math.random() * 100000);
-    a.push({ id:id, title:"東京親子遊", country:"Japan", city:"Tokyo", locs:[] }); saveTrips(a); setCur(id); renderAll();
-    var names = ["淺草寺","東京晴空塔","上野動物園","新宿御苑","澀谷","台場 DiverCity","東京迪士尼樂園"];
-    el("addStatus").textContent = "🗾 載入範例地點並驗證地址中…";
+    var t = currentTrip();
+    if (!t) { alert("請先在中間『旅遊行程』建立一個行程(選國家/城市)"); return; }
+    if (t.locs.length >= 10) { alert("地點已滿(10 個)"); return; }
+    var names = (SPOTS[t.city] || genericSpots(cityBase(t.city))).filter(function(n){ return !t.locs.some(function(l){ return l.name === n; }); });
+    names = names.slice(0, 10 - t.locs.length);
+    if (!names.length) { alert("沒有可加入的範例(可能已加過,或此城市無內建清單)"); return; }
+    var cb = cityBase(t.city), added = 0;
+    el("addStatus").textContent = "🗺️ 載入「" + t.city + "」範例地點…";
     (function next(i){
-      if (i >= names.length) { el("addStatus").textContent = "✅ 範例已載入"; renderAll(); return; }
+      if (i >= names.length) { el("addStatus").textContent = "✅ 已載入 " + added + " 個範例地點"; renderAll(); return; }
       var v = names[i];
-      geocodeFirst([v + ", Tokyo, Japan", v + " Tokyo", v + ", Japan", v]).then(function(res){
-        var t = currentTrip(); if (!t) return;
-        if (res) t.locs.push({ name:v, label:res.label, lat:res.lat, lon:res.lon, ok:true });
-        else t.locs.push({ name:v, label:"", ok:false });
-        var arr = loadTrips(); for (var k=0;k<arr.length;k++){ if(arr[k].id===t.id) arr[k]=t; } saveTrips(arr);
-        renderAll(); el("addStatus").textContent = "🗾 載入中… (" + (i+1) + "/" + names.length + ")";
+      geocodeFirst([v + ", " + cb + ", " + t.country, v + " " + cb, v + ", " + t.country, v]).then(function(res){
+        var tt = currentTrip(); if (!tt) return;
+        if (res) {
+          tt.locs.push({ name:v, label:res.label, lat:res.lat, lon:res.lon, ok:true }); added++;
+          var arr = loadTrips(); for (var k=0;k<arr.length;k++){ if(arr[k].id===tt.id) arr[k]=tt; } saveTrips(arr); renderAll();
+        }
+        el("addStatus").textContent = "🗺️ 載入中… (" + (i+1) + "/" + names.length + ")";
         setTimeout(function(){ next(i+1); }, 400);
       });
     })(0);
